@@ -1,0 +1,36 @@
+.notification-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  text-align: center;
+}
+
+.notification-message {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.notification-modal-error .notification-message {
+  color: var(--danger);
+}
+
+.notification-modal-warning .notification-message {
+  color: #f59e0b;
+}
+
+.notification-modal-success .notification-message {
+  color: #22c55e;
+}
+
+.notification-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.notification-confirm-btn {
+  min-width: 120px;
+}

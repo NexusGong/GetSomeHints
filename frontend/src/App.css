@@ -1,0 +1,28 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.app-main {
+  flex: 1;
+  margin-left: 240px;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+}
+
+/* 当侧边栏收起时 */
+.app-main.sidebar-collapsed {
+  margin-left: 60px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-main {
+    margin-left: 0;
+  }
+  
+  .app-main.sidebar-collapsed {
+    margin-left: 0;
+  }
+}

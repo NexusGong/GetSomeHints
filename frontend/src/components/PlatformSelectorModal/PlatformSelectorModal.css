@@ -1,0 +1,85 @@
+/* 平台选择器弹窗样式 - 豆包风格 */
+
+.platform-selector-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.platform-selector-modal-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.platform-selector-modal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: flex-start;
+}
+
+.platform-selector-modal-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+  font-size: 0.9rem;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.platform-selector-modal-item:hover:not(:disabled) {
+  background: var(--border);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.platform-selector-modal-item.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--primary), 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.platform-selector-modal-item.selected:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.platform-selector-modal-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.platform-selector-modal-item .platform-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.platform-selector-modal-item .platform-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.platform-selector-modal-info {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

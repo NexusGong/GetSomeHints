@@ -1,0 +1,121 @@
+/* 像素风动画效果 */
+
+/* LED 闪烁动画 */
+@keyframes pixel-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.pixel-led.blink {
+  animation: pixel-blink 1s infinite;
+}
+
+/* 像素闪烁动画 */
+@keyframes pixel-flash {
+  0%, 100% {
+    box-shadow: 
+      inset 0 0 5px rgba(255, 255, 255, 0.5),
+      0 0 10px currentColor,
+      0 0 20px currentColor;
+  }
+  50% {
+    box-shadow: 
+      inset 0 0 5px rgba(255, 255, 255, 0.8),
+      0 0 15px currentColor,
+      0 0 30px currentColor;
+  }
+}
+
+.pixel-led.flash {
+  animation: pixel-flash 0.5s infinite;
+}
+
+/* 加载动画 */
+@keyframes pixel-loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.pixel-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.pixel-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 0, 0.3),
+    transparent
+  );
+  animation: pixel-loading 1.5s infinite;
+}
+
+/* 打字机效果 */
+@keyframes pixel-typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.pixel-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: pixel-typewriter 2s steps(40, end);
+}
+
+/* 像素移动效果 */
+@keyframes pixel-move {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(2px, -2px);
+  }
+  50% {
+    transform: translate(0, 0);
+  }
+  75% {
+    transform: translate(-2px, 2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.pixel-move {
+  animation: pixel-move 0.5s ease-in-out;
+}
+
+/* 淡入动画 */
+@keyframes pixel-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pixel-fade-in {
+  animation: pixel-fade-in 0.3s ease-out;
+}

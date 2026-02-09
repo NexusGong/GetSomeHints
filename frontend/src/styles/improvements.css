@@ -1,0 +1,47 @@
+/* 额外的样式改进 */
+
+/* 提高整体可读性 */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 改善文本对比度 */
+p, span, div {
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+/* 改善输入框可读性 */
+input::placeholder {
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+/* 改善按钮可读性 */
+button {
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+/* 改善链接可读性 */
+a {
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--primary);
+  transition: color 0.15s;
+}
+
+a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* 改善选择框可读性 */
+select {
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+option {
+  background-color: var(--bg);
+  color: var(--text);
+  padding: var(--space-xs);
+}

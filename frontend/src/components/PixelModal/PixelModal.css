@@ -1,0 +1,128 @@
+/* 统一的弹窗样式 - 参考 FreeYourPDF 设计 */
+
+.pixel-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 18, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: var(--space-lg);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.pixel-modal-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pixel-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(124, 58, 237, 0.08), 0 0 24px var(--primary-glow-soft);
+  animation: modal-fade-in 0.2s ease-out;
+  overflow: hidden;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.pixel-modal-small {
+  width: 90%;
+  max-width: 440px;
+}
+
+.pixel-modal-medium {
+  width: 90%;
+  max-width: 900px;
+}
+
+.pixel-modal-large {
+  width: 90%;
+  max-width: 900px;
+}
+
+.pixel-modal-header {
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-elevated);
+}
+
+.pixel-modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.pixel-modal-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  border-radius: var(--radius-sm);
+  padding: 0;
+  line-height: 1;
+}
+
+.pixel-modal-close:hover {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.pixel-modal-content {
+  padding: var(--space-xl);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 滚动条样式 */
+.pixel-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pixel-modal-content::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.pixel-modal-content::-webkit-scrollbar-thumb {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.pixel-modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}

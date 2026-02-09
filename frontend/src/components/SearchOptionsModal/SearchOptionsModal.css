@@ -1,0 +1,226 @@
+/* 搜索选项弹窗样式 - 豆包风格 */
+
+.search-options-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.search-options-modal-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-md) 0;
+}
+
+.search-options-modal-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.search-options-modal-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.search-options-modal-label > span {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.search-options-modal-label:has(.search-options-modal-platform-actions) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-options-modal-platform-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.search-options-modal-platforms {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-sm);
+  justify-content: stretch;
+  width: 100%;
+}
+
+.search-options-modal-platform-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: var(--space-sm) var(--space-xs);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+  font-size: 0.8rem;
+  min-height: 56px;
+  height: 56px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.search-options-modal-platform-item:hover:not(:disabled) {
+  background: var(--border);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.search-options-modal-platform-item.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--primary), 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.search-options-modal-platform-item.selected:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.search-options-modal-platform-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.search-options-modal-platform-item .platform-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.search-options-modal-platform-item .platform-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.search-options-modal-platform-info {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: var(--space-sm);
+}
+
+.search-options-modal-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.search-options-modal-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-options-modal-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.search-options-modal-select {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.search-options-modal-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 0 12px var(--primary-glow-soft);
+}
+
+.search-options-modal-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.search-options-modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.search-options-modal-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.search-options-modal-checkbox:has(input:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.search-options-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.search-options-modal-confirm-btn {
+  padding: var(--space-sm) var(--space-xl);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.search-options-modal-confirm-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.search-options-modal-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--border);
+  border-color: var(--border);
+  color: var(--text-muted);
+}

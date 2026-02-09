@@ -1,0 +1,58 @@
+/* Zpix 像素字体配置 - 参考 FreeYourPDF */
+
+@font-face {
+  font-family: "Zpix";
+  src: url("../assets/fonts/zpix.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  font-family: "Zpix", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  font-family: "Zpix", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 0.75rem;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0 0 0.5rem;
+}
+
+h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0 0 0.5rem;
+}
+
+/* 小字体 */
+.small-text {
+  font-size: 0.85rem;
+}
+
+/* 超小字体 */
+.tiny-text {
+  font-size: 0.75rem;
+}

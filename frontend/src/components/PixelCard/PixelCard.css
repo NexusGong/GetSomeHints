@@ -1,0 +1,8 @@
+.pixel-card-clickable {
+  cursor: pointer;
+}
+
+.pixel-card-clickable:hover {
+  border-color: var(--primary);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--primary), 0 0 28px var(--primary-glow);
+}

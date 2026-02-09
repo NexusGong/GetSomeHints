@@ -1,0 +1,105 @@
+/* 分析弹窗内容样式 - 使用新的设计系统 */
+
+.analysis-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.analysis-loading {
+  text-align: center;
+  padding: var(--space-xl);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.analysis-stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+}
+
+.stat-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-lg);
+  text-align: center;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.08), 0 0 12px var(--primary-glow-soft);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: var(--space-xs);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.analysis-chart {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-lg);
+}
+
+.analysis-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  color: var(--text);
+}
+
+.chart-container {
+  height: 300px;
+  position: relative;
+}
+
+.analysis-platform-stats {
+  margin-top: var(--space-md);
+}
+
+.platform-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+.platform-stat-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.08), 0 0 8px var(--primary-glow-soft);
+}
+
+.platform-stat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.platform-stat-icon {
+  font-size: 1.25rem;
+}
+
+.platform-stat-name {
+  color: var(--text);
+}
+
+.platform-stat-details {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
