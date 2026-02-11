@@ -31,6 +31,8 @@ SAVE_LOGIN_STATE = _bool("MC_SAVE_LOGIN_STATE", True)
 ENABLE_CDP_MODE = _bool("MC_ENABLE_CDP_MODE", False)
 CDP_HEADLESS = _bool("CDP_HEADLESS", False)
 USER_DATA_DIR = os.environ.get("MC_USER_DATA_DIR", "%s_user_data_dir")
+# 浏览器数据根目录，空则用 cwd/browser_data；由 app 通过 MC_BROWSER_DATA_DIR 注入
+BROWSER_DATA_BASE = os.environ.get("MC_BROWSER_DATA_DIR", os.path.join(os.getcwd(), "browser_data"))
 START_PAGE = _int("MC_START_PAGE", 1)
 CRAWLER_MAX_NOTES_COUNT = _int("CRAWLER_MAX_NOTES_COUNT", 15)
 MAX_CONCURRENCY_NUM = _int("MAX_CONCURRENCY_NUM", 1)

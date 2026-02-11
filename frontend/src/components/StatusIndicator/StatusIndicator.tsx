@@ -1,7 +1,7 @@
 import React from 'react';
 import './StatusIndicator.css';
 
-type Status = 'idle' | 'searching' | 'completed' | 'stopped' | 'error';
+type Status = 'idle' | 'searching' | 'running' | 'completed' | 'stopped' | 'error';
 
 interface StatusIndicatorProps {
   status: Status;
@@ -17,6 +17,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
       case 'idle':
         return { className: 'off', label: '就绪' };
       case 'searching':
+      case 'running':
         return { className: 'on blink', label: '搜索中' };
       case 'completed':
         return { className: 'on', label: '完成' };

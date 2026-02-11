@@ -67,18 +67,17 @@ async def run_search_task(
                     await broadcast(f"开始爬取 {platform_label}...", "info", platform=platform_label)
                     logger.info("开始爬取 %s…", platform_label)
                     posts = []
-                    if platform == "dy":
-                        from app.crawler.douyin import (
-                            _run_douyin_sync_in_thread,
-                            _aweme_to_unified_post,
-                            _comment_to_unified,
-                        )
+                    run_sync = getattr(crawler_cls, "run_search_sync", None)
+                    if callable(run_sync):
+                        # 使用平台适配器：dy/xhs 等在独立线程中运行，返回已挂评论的 UnifiedPost
+                        limit = min(max_count, settings.CRAWLER_MAX_NOTES_COUNT)
                         task = asyncio.create_task(
                             asyncio.to_thread(
-                                _run_douyin_sync_in_thread,
+                                run_sync,
                                 keywords,
-                                min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
-                                20,
+                                limit,
+                                enable_comments,
+                                20 if enable_comments else 0,
                                 time_range,
                                 content_types or ["video", "image_text", "link"],
                             )
@@ -89,53 +88,7 @@ async def run_search_task(
                                 rid = item[3] if len(item) > 3 else None
                                 await broadcast(msg, level, plat, rid)
                             await asyncio.sleep(0.4)
-                        try:
-                            notes_list, comments_list = task.result()
-                        except Exception as e:
-                            raise e
-                        posts = [_aweme_to_unified_post(n) for n in notes_list]
-                        comment_map = {}
-                        for aweme_id, c in comments_list:
-                            aid = str(aweme_id)
-                            comment_map.setdefault(aid, []).append(_comment_to_unified(aid, c))
-                        for p in posts:
-                            p.platform_data.setdefault("comments", [])
-                            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
-                        posts = posts[: min(max_count, settings.CRAWLER_MAX_NOTES_COUNT)]
-                    elif platform == "xhs":
-                        from app.crawler.xhs import (
-                            _run_xhs_sync_in_thread,
-                            _note_to_unified_post,
-                            _comment_to_unified,
-                        )
-                        task = asyncio.create_task(
-                            asyncio.to_thread(
-                                _run_xhs_sync_in_thread,
-                                keywords,
-                                min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
-                                enable_comments,
-                                20 if enable_comments else 0,
-                                content_types or ["video", "image_text", "link"],
-                            )
-                        )
-                        while not task.done():
-                            for item in drain_pending_logs():
-                                msg, level, plat = item[0], item[1], item[2]
-                                rid = item[3] if len(item) > 3 else None
-                                await broadcast(msg, level, plat, rid)
-                            await asyncio.sleep(0.4)
-                        try:
-                            notes_list, comments_list = task.result()
-                        except Exception as e:
-                            raise e
-                        posts = [_note_to_unified_post(n) for n in notes_list]
-                        comment_map = {}
-                        for nid, c in comments_list:
-                            comment_map.setdefault(nid, []).append(_comment_to_unified(nid, c))
-                        for p in posts:
-                            p.platform_data.setdefault("comments", [])
-                            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
-                        posts = posts[: min(max_count, settings.CRAWLER_MAX_NOTES_COUNT)]
+                        posts = task.result()
                     else:
                         crawler = crawler_cls(proxy_pool=proxy_pool)
                         try:

@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { PixelButton } from '../PixelButton/PixelButton';
 import { PixelModal } from '../PixelModal/PixelModal';
 import { exportToCSV, exportToJSON, copyToClipboard } from '../../utils/exportUtils';
 import type { UnifiedPost } from '../../types';

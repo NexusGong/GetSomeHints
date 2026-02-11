@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { HomePage } from './pages/HomePage/HomePage';
 import { HistoryPage } from './pages/HistoryPage/HistoryPage';

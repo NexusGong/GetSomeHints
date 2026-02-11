@@ -117,9 +117,15 @@ def _run_xhs_sync_in_thread(
     content_types: Optional[List[str]] = None,
 ) -> tuple[list, list]:
     """在单独线程中运行小红书 MC 搜索，返回 (notes_list, comments_list)。"""
+    from pathlib import Path
     notes_list: List[dict] = []
     comments_list: List[tuple] = []
 
+    from app.config import settings
+    backend_dir = Path(__file__).resolve().parent.parent.parent
+    os.environ["MC_BROWSER_DATA_DIR"] = (
+        settings.BROWSER_DATA_DIR or str(backend_dir / "browser_data")
+    )
     os.environ["MC_PLATFORM"] = "xhs"
     os.environ["MC_KEYWORDS"] = keywords.strip() or "热门"
     os.environ["MC_CRAWLER_TYPE"] = "search"
@@ -132,8 +138,6 @@ def _run_xhs_sync_in_thread(
     os.environ.setdefault("MC_HEADLESS", "false")
     os.environ.setdefault("MC_SAVE_LOGIN_STATE", "true")
     os.environ.setdefault("MC_SORT_TYPE", "general")
-
-    from app.config import settings
     os.environ["ENABLE_IP_PROXY"] = "true" if settings.ENABLE_IP_PROXY else "false"
     os.environ["IP_PROXY_POOL_COUNT"] = str(settings.IP_PROXY_POOL_COUNT)
 
@@ -150,8 +154,39 @@ def _run_xhs_sync_in_thread(
     return notes_list, comments_list
 
 
+def run_search_sync(
+    keywords: str,
+    max_count: int,
+    enable_comments: bool = True,
+    max_comments_per_note: int = 20,
+    time_range: str = "all",
+    content_types: Optional[List[str]] = None,
+) -> List[UnifiedPost]:
+    """
+    平台适配器：在调用线程中运行小红书搜索，返回已挂好评论的 UnifiedPost 列表。
+    供 crawler_runner 统一调用，不暴露内部 note/comment 结构。
+    """
+    notes_list, comments_list = _run_xhs_sync_in_thread(
+        keywords,
+        max_count,
+        enable_comments,
+        max_comments_per_note if enable_comments else 0,
+        content_types,
+    )
+    posts = [_note_to_unified_post(n) for n in notes_list]
+    comment_map: dict = {}
+    for nid, c in comments_list:
+        comment_map.setdefault(nid, []).append(_comment_to_unified(nid, c))
+    for p in posts:
+        p.platform_data.setdefault("comments", [])
+        p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
+    return posts[:max_count]
+
+
 class XiaoHongShuCrawler(BaseCrawler):
     """小红书爬虫：使用 app.xhs_crawler 真实抓取。"""
+
+    run_search_sync = run_search_sync  # 平台适配器，供 crawler_runner 统一调用
 
     async def search(
         self,
@@ -162,22 +197,17 @@ class XiaoHongShuCrawler(BaseCrawler):
         enable_comments: bool = True,
         max_comments_per_note: int = 20,
     ) -> List[UnifiedPost]:
-        """关键词搜索。由 crawler_runner 通过 to_thread 调用 _run_xhs_sync_in_thread，此处仅做同步封装供单测或直接调用。"""
-        notes_list, comments_list = await asyncio.to_thread(
-            _run_xhs_sync_in_thread,
+        """关键词搜索。内部使用 run_search_sync，供单测或直接调用。"""
+        await self._before_request()
+        return await asyncio.to_thread(
+            run_search_sync,
             keywords.strip() or "热门",
             max(20, min(max_count, 100)),
             enable_comments,
-            max_comments_per_note if enable_comments else 0,
+            max_comments_per_note,
+            time_range,
             content_types,
         )
-        posts = [_note_to_unified_post(n) for n in notes_list]
-        comment_map: dict = {}
-        for nid, c in comments_list:
-            comment_map.setdefault(nid, []).append(_comment_to_unified(nid, c))
-        for p in posts:
-            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
-        return posts[:max_count]
 
     async def get_comments(
         self,

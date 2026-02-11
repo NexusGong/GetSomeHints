@@ -3,7 +3,7 @@ import './PixelCard.css';
 
 interface PixelCardProps {
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   className?: string;
 }
 

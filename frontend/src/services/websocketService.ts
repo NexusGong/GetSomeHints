@@ -24,8 +24,6 @@ class WebSocketService {
   private maxReconnectAttempts = 10;
   private reconnectDelay = 1500;
   private _connectionState: ConnectionState = 'disconnected';
-  private _url: string = '';
-
   private setConnectionState(state: ConnectionState) {
     if (this._connectionState === state) return;
     this._connectionState = state;
@@ -51,7 +49,6 @@ class WebSocketService {
   }
 
   connect(url: string = `${WS_BASE_URL}/api/ws/logs`) {
-    this._url = url;
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.setConnectionState('connected');
       return;

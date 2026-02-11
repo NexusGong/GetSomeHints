@@ -153,6 +153,9 @@ async def _run_douyin_crawler_search(
     old_cwd = os.getcwd()
     try:
         os.chdir(str(backend_dir))
+        os.environ["MC_BROWSER_DATA_DIR"] = (
+            settings.BROWSER_DATA_DIR or str(backend_dir / "browser_data")
+        )
         push_log_sync("正在准备搜索…", "info", "抖音")
         _user_log.info("[抖音] 正在准备搜索…")
         os.environ["MC_PLATFORM"] = "dy"
@@ -193,8 +196,40 @@ async def _run_douyin_crawler_search(
         os.chdir(old_cwd)
 
 
+def run_search_sync(
+    keywords: str,
+    max_count: int,
+    enable_comments: bool = True,
+    max_comments_per_note: int = 20,
+    time_range: str = "all",
+    content_types: Optional[List[str]] = None,
+) -> List[UnifiedPost]:
+    """
+    平台适配器：在调用线程中运行抖音搜索，返回已挂好评论的 UnifiedPost 列表。
+    供 crawler_runner 统一调用，不暴露内部 aweme/comment 结构。
+    """
+    notes_list, comments_list = _run_douyin_sync_in_thread(
+        keywords,
+        max_count,
+        max_comments_per_note if enable_comments else 0,
+        time_range,
+        content_types,
+    )
+    posts = [_aweme_to_unified_post(n) for n in notes_list]
+    comment_map: dict = {}
+    for aweme_id, c in comments_list:
+        aid = str(aweme_id)
+        comment_map.setdefault(aid, []).append(_comment_to_unified(aid, c))
+    for p in posts:
+        p.platform_data.setdefault("comments", [])
+        p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
+    return posts[:max_count]
+
+
 class DouYinCrawler(BaseCrawler):
     """抖音爬虫：使用内嵌 douyin_crawler，不依赖 mediacrawler_bundle。"""
+
+    run_search_sync = run_search_sync  # 平台适配器，供 crawler_runner 统一调用
 
     async def search(
         self,
@@ -204,19 +239,12 @@ class DouYinCrawler(BaseCrawler):
         content_types: Optional[List[str]] = None,
     ) -> List[UnifiedPost]:
         await self._before_request()
-        notes_list, comments_list = await asyncio.to_thread(
-            _run_douyin_sync_in_thread,
+        return await asyncio.to_thread(
+            run_search_sync,
             keywords,
             max_count,
+            True,
             20,
             time_range,
             content_types,
         )
-        posts = [_aweme_to_unified_post(n) for n in notes_list]
-        comment_map: dict = {}
-        for aweme_id, c in comments_list:
-            aid = str(aweme_id)
-            comment_map.setdefault(aid, []).append(_comment_to_unified(aid, c))
-        for p in posts:
-            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
-        return posts[:max_count]

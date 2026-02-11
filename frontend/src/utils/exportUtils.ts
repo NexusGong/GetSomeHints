@@ -41,6 +41,10 @@ export const exportToCSV = (posts: UnifiedPost[], filename: string = 'search_res
       return s;
     };
 
+    const publishStr = (() => {
+      const pt = post.publish_time as string | number | Date;
+      return typeof pt === 'string' ? pt : (pt instanceof Date ? pt.toISOString() : String(pt));
+    })();
     return [
       post.platform,
       post.post_id,
@@ -48,17 +52,13 @@ export const exportToCSV = (posts: UnifiedPost[], filename: string = 'search_res
       escapeCSV(post.content),
       escapeCSV(post.author.author_name),
       post.author.author_id,
-      typeof post.publish_time === 'string' 
-        ? post.publish_time 
-        : (post.publish_time instanceof Date 
-          ? post.publish_time.toISOString() 
-          : String(post.publish_time)),
-      post.like_count,
-      post.comment_count,
-      post.share_count,
-      post.collect_count || '',
+      publishStr,
+      String(post.like_count),
+      String(post.comment_count),
+      String(post.share_count),
+      String(post.collect_count ?? ''),
       post.url,
-    ].map(escapeCSV).join(',');
+    ].map((v) => escapeCSV(String(v))).join(',');
   });
 
   // 组合 CSV 内容
@@ -117,11 +117,10 @@ export const copyToClipboard = async (posts: UnifiedPost[]): Promise<boolean> =>
       return `[${index + 1}] ${post.platform.toUpperCase()}
 标题: ${post.title}
 作者: ${post.author.author_name} (@${post.author.author_id})
-发布时间: ${typeof post.publish_time === 'string' 
-  ? post.publish_time 
-  : (post.publish_time instanceof Date 
-    ? post.publish_time.toISOString() 
-    : String(post.publish_time))}
+发布时间: ${(() => {
+  const pt = post.publish_time as string | number | Date;
+  return typeof pt === 'string' ? pt : (pt instanceof Date ? pt.toISOString() : String(pt));
+})()}
 点赞: ${post.like_count} | 评论: ${post.comment_count} | 分享: ${post.share_count}
 链接: ${post.url}
 ${post.content ? `内容: ${post.content.substring(0, 200)}${post.content.length > 200 ? '...' : ''}` : ''}

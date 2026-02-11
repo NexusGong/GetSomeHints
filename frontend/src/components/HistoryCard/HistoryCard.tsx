@@ -71,22 +71,15 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({
     }
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = (e?: React.MouseEvent) => {
     // 如果点击的是选择框或删除按钮，不触发卡片点击
-    if (
+    if (e?.target && (
       (e.target as HTMLElement).closest('.history-card-select') ||
       (e.target as HTMLElement).closest('.history-card-delete')
-    ) {
+    )) {
       return;
     }
     onClick();
-  };
-
-  const handleSelect = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onSelect) {
-      onSelect(record.id);
-    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -108,8 +101,11 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({
               type="checkbox"
               className="history-card-select"
               checked={isSelected}
-              onChange={handleSelect}
-              onClick={handleSelect}
+              onChange={(e) => {
+                e.stopPropagation();
+                onSelect(record.id);
+              }}
+              onClick={(e) => e.stopPropagation()}
             />
           )}
           <div className="history-card-content">

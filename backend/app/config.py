@@ -53,6 +53,9 @@ class Settings:
     KDL_USER_NAME: str = os.getenv("KDL_USER_NAME", "") or os.getenv("kdl_user_name", "")
     KDL_USER_PWD: str = os.getenv("KDL_USER_PWD", "") or os.getenv("kdl_user_pwd", "")
 
+    # Playwright 浏览器数据目录（空则用 backend/browser_data，可设为项目外路径如 ~/.getsomehints/browser_data）
+    BROWSER_DATA_DIR: str = os.getenv("BROWSER_DATA_DIR", "").strip()
+
 
 settings = Settings()
 

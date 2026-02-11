@@ -303,7 +303,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     ) -> BrowserContext:
         if xhs_config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(
-                os.getcwd(), "browser_data", xhs_config.USER_DATA_DIR % xhs_config.PLATFORM
+                xhs_config.BROWSER_DATA_BASE, xhs_config.USER_DATA_DIR % xhs_config.PLATFORM
             )
             return await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,

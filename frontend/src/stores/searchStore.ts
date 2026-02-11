@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { Platform, SearchRequest, SearchResponse, UnifiedPost } from '../types';
-import type { SearchOptionsConfig } from '../components/SearchOptions/SearchOptions';
+import type { Platform } from '../types';
+import type { SearchOptionsConfig, ContentType } from '../components/SearchOptions/SearchOptions';
 
 interface SearchState {
   keyword: string;
   selectedPlatforms: Platform[];
   searchOptions: SearchOptionsConfig;
   isSearching: boolean;
-  status: 'idle' | 'searching' | 'completed' | 'stopped' | 'error';
+  status: 'idle' | 'searching' | 'running' | 'completed' | 'stopped' | 'error';
   progress: number;
   taskId: string | null;
   stats: {
@@ -32,7 +32,7 @@ const initialState = {
     enableComments: true,
     enableSubComments: false,
     timeRange: 'all' as const,
-    contentTypes: ['video', 'image_text', 'link'] as const,
+    contentTypes: ['video', 'image_text', 'link'] as ContentType[],
   },
   isSearching: false,
   status: 'idle' as const,

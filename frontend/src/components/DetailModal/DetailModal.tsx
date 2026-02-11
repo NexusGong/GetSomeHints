@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { UnifiedPost, UnifiedComment } from '../../types';
 import { PixelModal } from '../PixelModal/PixelModal';
 import { formatDistanceToNow } from 'date-fns';

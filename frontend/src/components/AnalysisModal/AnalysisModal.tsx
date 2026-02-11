@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { PixelModal } from '../PixelModal/PixelModal';
 import { analysisApi } from '../../services/api';
-import type { AnalysisStats, UnifiedPost } from '../../types';
+import type { AnalysisStats, Platform, PlatformStats, UnifiedPost } from '../../types';
 import type { HistoryRecord } from '../../stores/historyStore';
 import { PLATFORMS } from '../../utils/constants';
 import {
@@ -15,6 +15,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Pie, Line, Bar } from 'react-chartjs-2';
 import './AnalysisModal.css';
@@ -28,7 +29,8 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 /** 根据帖子推断内容类型 */
@@ -134,13 +136,13 @@ function computeAnalysisFromPosts(posts: UnifiedPost[]): {
   const byPlatform: Record<string, number> = {};
   posts.forEach((p) => { byPlatform[p.platform] = (byPlatform[p.platform] || 0) + 1; });
 
-  const platform_stats = Object.keys(byPlatform).sort().map((platform) => {
+  const platform_stats: PlatformStats[] = Object.keys(byPlatform).sort().map((platform) => {
     const plPosts = posts.filter((p) => p.platform === platform);
     const sumLikes = plPosts.reduce((s, p) => s + p.like_count, 0);
     const sumComments = plPosts.reduce((s, p) => s + p.comment_count, 0);
     const authorCount = new Set(plPosts.map((p) => p.author.author_id)).size;
     return {
-      platform,
+      platform: platform as Platform,
       post_count: plPosts.length,
       comment_count: plPosts.reduce((s, p) => s + p.comment_count, 0),
       author_count: authorCount,

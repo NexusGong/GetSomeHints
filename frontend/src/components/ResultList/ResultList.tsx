@@ -127,7 +127,6 @@ export const ResultList: React.FC<ResultListProps> = ({
               onClick={() => {
                 // 切换筛选显示：在用户选择的平台和所有平台之间切换
                 const currentFilterSet = new Set(filters.platforms);
-                const availableSet = new Set(availablePlatforms);
                 const isShowingSelected = 
                   filters.platforms.length === availablePlatforms.length &&
                   availablePlatforms.every(p => currentFilterSet.has(p));

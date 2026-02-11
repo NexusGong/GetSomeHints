@@ -4,11 +4,10 @@ import { PixelButton } from '../../components/PixelButton/PixelButton';
 import { ExportMenu } from '../../components/ExportMenu/ExportMenu';
 import { HistoryDetailModal } from '../../components/HistoryDetailModal/HistoryDetailModal';
 import { useHistoryStore, type HistoryRecord } from '../../stores/historyStore';
-import { exportToJSON } from '../../utils/exportUtils';
 import './HistoryPage.css';
 
 export const HistoryPage: React.FC = () => {
-  const { records, deleteRecord, deleteRecords, getRecord, clearAll } = useHistoryStore();
+  const { records, deleteRecord, deleteRecords, clearAll } = useHistoryStore();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedRecord, setSelectedRecord] = useState<HistoryRecord | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -73,13 +72,6 @@ export const HistoryPage: React.FC = () => {
   const handleViewDetail = (record: HistoryRecord) => {
     setSelectedRecord(record);
     setIsDetailModalOpen(true);
-  };
-
-  const handleExportSelected = () => {
-    if (selectedIds.size === 0) return;
-    const selectedRecords = filteredRecords.filter((r) => selectedIds.has(r.id));
-    const allPosts = selectedRecords.flatMap((r) => r.results);
-    exportToJSON(allPosts, `历史记录_${new Date().toISOString().split('T')[0]}`);
   };
 
   const handleClearAll = () => {

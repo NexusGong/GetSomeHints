@@ -7,7 +7,7 @@ import { AnalysisModal } from '../AnalysisModal/AnalysisModal';
 import { DetailModal } from '../DetailModal/DetailModal';
 import { BatchActions } from '../BatchActions/BatchActions';
 import type { HistoryRecord } from '../../stores/historyStore';
-import type { UnifiedPost, UnifiedComment, Platform } from '../../types';
+import type { UnifiedPost, UnifiedComment } from '../../types';
 import { PLATFORMS } from '../../utils/constants';
 import { searchApi } from '../../services/api';
 import { sortPosts, type ResultSortBy } from '../../utils/sortUtils';
@@ -67,15 +67,6 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
       }
       return newSet;
     });
-  };
-
-  const handleSelectAll = () => {
-    if (!record) return;
-    if (selectedPosts.size === record.results.length) {
-      setSelectedPosts(new Set());
-    } else {
-      setSelectedPosts(new Set(record.results.map((p) => `${p.platform}-${p.post_id}`)));
-    }
   };
 
   const handleClearSelection = () => {

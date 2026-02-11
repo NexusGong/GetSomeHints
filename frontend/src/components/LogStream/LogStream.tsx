@@ -17,7 +17,7 @@ export const LogStream: React.FC<LogStreamProps> = ({
 }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
-  const { progress, status, stats } = useSearchStore();
+  const { status, stats } = useSearchStore();
   const isSearching = status === 'searching' || status === 'running';
   const [isExpanded, setIsExpanded] = useState(true);
   const logContainerRef = useRef<HTMLDivElement>(null);
