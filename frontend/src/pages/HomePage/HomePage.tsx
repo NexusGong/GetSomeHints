@@ -353,9 +353,14 @@ export const HomePage: React.FC = () => {
   return (
     <div className="home-page">
       <div className="home-page-header">
-        <h1>GetSomeHints</h1>
-        <p className="home-page-subtitle">多平台搜索工具</p>
-        <p className="home-page-notice">当前为示例数据，不会打开浏览器；真实抓取需接入 Playwright 与登录态。</p>
+        <div className="home-page-header-title-row">
+          <img src="/logo.png" alt="GetSomeHints" className="home-page-logo" />
+          <h1>GetSomeHints</h1>
+        </div>
+        <div className="home-page-header-text">
+          <p className="home-page-subtitle">多平台搜索工具</p>
+          <p className="home-page-notice">本工具仅供学习与研究使用，请遵守各平台使用条款及相关法律法规，勿用于商业或违规用途。</p>
+        </div>
       </div>
 
       <div className="home-page-content">
@@ -452,7 +457,7 @@ export const HomePage: React.FC = () => {
               )}
             </div>
 
-            <LogStream clearTrigger={logClearTrigger} />
+            {hasStartedSearch && <LogStream clearTrigger={logClearTrigger} />}
 
             {/* 只在有结果时才显示结果列表 */}
             {results.length > 0 && (
@@ -492,8 +497,8 @@ export const HomePage: React.FC = () => {
               </>
             )}
 
-            {/* 无本次结果但有历史时，仍显示数据分析入口（弹窗内可选历史记录） */}
-            {results.length === 0 && historyRecords.length > 0 && (
+            {/* 无本次结果但有历史且用户已实际搜索过时，显示数据分析入口（弹窗内可选历史记录） */}
+            {results.length === 0 && historyRecords.length > 0 && hasStartedSearch && (
               <div className="result-actions-bar">
                 <PixelButton
                   onClick={() => setIsAnalysisModalOpen(true)}

@@ -21,7 +21,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!isCollapsed && <h2 className="sidebar-title">GetSomeHints</h2>}
+        <div className="sidebar-brand">
+          <img src="/logo.png" alt="" className="sidebar-logo" />
+          {!isCollapsed && <h2 className="sidebar-title">GetSomeHints</h2>}
+        </div>
         <button
           className="sidebar-toggle"
           onClick={toggleSidebar}

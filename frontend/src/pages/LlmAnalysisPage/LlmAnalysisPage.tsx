@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LlmAnalysisCard } from '../../components/LlmAnalysisCard/LlmAnalysisCard';
 import { PixelButton } from '../../components/PixelButton/PixelButton';
 import { LlmAnalysisModal } from '../../components/LlmAnalysisModal/LlmAnalysisModal';
