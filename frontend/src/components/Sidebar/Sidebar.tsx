@@ -2,8 +2,8 @@ import React from 'react';
 import './Sidebar.css';
 
 interface SidebarProps {
-  currentPage: 'home' | 'history';
-  onPageChange: (page: 'home' | 'history') => void;
+  currentPage: 'home' | 'history' | 'llm';
+  onPageChange: (page: 'home' | 'history' | 'llm') => void;
   isCollapsed: boolean;
   onToggleCollapse: (collapsed: boolean) => void;
 }
@@ -46,6 +46,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <span className="sidebar-icon">📚</span>
           {!isCollapsed && <span className="sidebar-label">历史爬取</span>}
+        </button>
+
+        <button
+          className={`sidebar-item ${currentPage === 'llm' ? 'active' : ''}`}
+          onClick={() => onPageChange('llm')}
+        >
+          <span className="sidebar-icon">🤖</span>
+          {!isCollapsed && <span className="sidebar-label">大模型分析</span>}
         </button>
       </nav>
     </div>

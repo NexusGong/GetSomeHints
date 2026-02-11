@@ -3,7 +3,7 @@
  */
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
-import type { SearchRequest, SearchResponse, UnifiedPost, UnifiedComment, AnalysisStats } from '../types';
+import type { SearchRequest, SearchResponse, UnifiedPost, UnifiedComment, AnalysisStats, LlmLeadsResult, LlmScenario } from '../types';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -112,6 +112,32 @@ export const analysisApi = {
       params: { task_id: taskId, limit, sort_by: sortBy },
       headers: { 'Content-Type': 'application/json' },
     });
+  },
+
+  /**
+   * 获取大模型分析场景列表（供前端下拉选择）
+   */
+  getLlmScenarios: async (): Promise<LlmScenario[]> => {
+    return api.get('/api/analysis/llm-scenarios');
+  },
+
+  /**
+   * 大模型分析（支持传帖子列表或 task_id、模型名、场景，超时 90s）
+   */
+  runLlmLeadsAnalysis: async (params: { taskId?: string; posts?: UnifiedPost[]; model?: string; scene?: string }): Promise<LlmLeadsResult> => {
+    const { taskId, posts, model = 'deepseek-chat', scene } = params;
+    const body = posts != null && posts.length > 0 ? { posts, model, scene: scene || undefined } : { model, scene: scene || undefined };
+    if (posts != null && posts.length > 0) {
+      return api.post('/api/analysis/llm-leads', body, { timeout: 90000 });
+    }
+    if (taskId) {
+      return api.post('/api/analysis/llm-leads', body, {
+        params: { task_id: taskId },
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 90000,
+      });
+    }
+    return Promise.reject(new Error('请提供 taskId 或 posts'));
   },
 };
 

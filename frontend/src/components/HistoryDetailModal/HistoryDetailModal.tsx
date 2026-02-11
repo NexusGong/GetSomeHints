@@ -4,6 +4,7 @@ import { ResultList } from '../ResultList/ResultList';
 import { ExportMenu } from '../ExportMenu/ExportMenu';
 import { PixelButton } from '../PixelButton/PixelButton';
 import { AnalysisModal } from '../AnalysisModal/AnalysisModal';
+import { LlmAnalysisModal } from '../LlmAnalysisModal/LlmAnalysisModal';
 import { DetailModal } from '../DetailModal/DetailModal';
 import { BatchActions } from '../BatchActions/BatchActions';
 import type { HistoryRecord } from '../../stores/historyStore';
@@ -29,6 +30,7 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isLlmModalOpen, setIsLlmModalOpen] = useState(false);
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
   const [detailSortBy, setDetailSortBy] = useState<ResultSortBy>('time');
 
@@ -195,6 +197,12 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
                   >
                     📊 数据分析
                   </PixelButton>
+                  <PixelButton
+                    onClick={() => setIsLlmModalOpen(true)}
+                    variant="primary"
+                  >
+                    🤖 大模型分析
+                  </PixelButton>
                 </div>
               </>
             ) : (
@@ -222,6 +230,12 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
         onClose={() => setIsAnalysisModalOpen(false)}
         taskId={record?.taskId ?? null}
         posts={record?.results ?? []}
+      />
+
+      <LlmAnalysisModal
+        isOpen={isLlmModalOpen}
+        onClose={() => setIsLlmModalOpen(false)}
+        initialPosts={record?.results ?? []}
       />
     </>
   );

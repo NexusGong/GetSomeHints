@@ -1,0 +1,14 @@
+/* 与历史爬取页共用 HistoryPage.css 布局，此处仅补充大模型分析页独有样式 */
+
+.history-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llm-analysis-empty-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+  max-width: 420px;
+}

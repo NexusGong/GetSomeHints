@@ -359,3 +359,127 @@
   padding: 0;
   font-family: inherit;
 }
+
+/* 大模型分析区块 */
+.analysis-llm-section .analysis-llm-actions {
+  margin-bottom: var(--space-md);
+}
+
+.analysis-llm-run-btn {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-on-primary, #000);
+  background: var(--primary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.analysis-llm-run-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.analysis-llm-run-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.analysis-llm-error {
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid var(--danger, #e74c3c);
+  border-radius: var(--radius-sm);
+  color: var(--danger, #e74c3c);
+  font-size: 0.9rem;
+}
+
+.analysis-llm-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.analysis-llm-summary {
+  padding: var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.analysis-llm-block-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--text);
+}
+
+.analysis-llm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.analysis-llm-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.analysis-llm-item-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.analysis-llm-item-platform {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.analysis-llm-intent {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.analysis-llm-item-reason {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.analysis-llm-item-contacts {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--primary);
+}
+
+.analysis-llm-item-source {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.analysis-llm-contacts .analysis-llm-item {
+  flex-direction: column;
+  align-items: flex-start;
+}

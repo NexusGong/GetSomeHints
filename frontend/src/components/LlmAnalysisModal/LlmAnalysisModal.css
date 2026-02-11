@@ -1,0 +1,299 @@
+.llm-analysis-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.llm-analysis-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-lg);
+}
+
+.llm-analysis-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.llm-analysis-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.llm-analysis-select {
+  min-width: 260px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+
+.llm-analysis-no-data {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: var(--space-lg);
+}
+
+/* 第一步：选择数据来源列表 */
+.llm-analysis-select-source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.llm-analysis-select-source-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.llm-analysis-select-source-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.llm-analysis-source-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.llm-analysis-source-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.llm-analysis-source-item:hover {
+  border-color: var(--primary);
+  background: var(--surface-elevated);
+}
+
+.llm-analysis-source-item-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.llm-analysis-source-item-meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.llm-analysis-selected-source-value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.llm-analysis-change-source {
+  padding: 0;
+  font-size: 0.8125rem;
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+.llm-analysis-change-source:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.llm-analysis-change-source:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.llm-analysis-actions {
+  margin-left: auto;
+}
+
+.llm-analysis-log-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.llm-analysis-log-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.llm-analysis-log-box {
+  min-height: 180px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: "Zpix", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.llm-analysis-log-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.llm-analysis-log-line {
+  margin: var(--space-xs) 0;
+}
+
+.llm-analysis-log-time {
+  color: var(--text-muted);
+  margin-right: var(--space-sm);
+}
+
+.llm-analysis-log-text {
+  color: var(--text);
+}
+
+.llm-analysis-log-line.log-success .llm-analysis-log-text {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.llm-analysis-log-line.log-error .llm-analysis-log-text {
+  color: var(--danger, #e74c3c);
+}
+
+.llm-analysis-error {
+  padding: var(--space-md);
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid var(--danger, #e74c3c);
+  border-radius: var(--radius-sm);
+  color: var(--danger, #e74c3c);
+  font-size: 0.9rem;
+}
+
+.llm-analysis-result-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.llm-analysis-saved-hint {
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.llm-analysis-summary {
+  padding: var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.llm-analysis-block h4 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--text);
+}
+
+.llm-analysis-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.llm-analysis-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.llm-analysis-item-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.llm-analysis-item-platform {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.llm-analysis-intent {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.llm-analysis-item-reason {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.llm-analysis-item-contacts {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--primary);
+}
+
+.llm-analysis-item-source {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.llm-analysis-contacts li {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.llm-analysis-no-result {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}

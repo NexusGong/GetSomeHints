@@ -56,6 +56,15 @@ class Settings:
     # Playwright 浏览器数据目录（空则用 backend/browser_data，可设为项目外路径如 ~/.getsomehints/browser_data）
     BROWSER_DATA_DIR: str = os.getenv("BROWSER_DATA_DIR", "").strip()
 
+    # DeepSeek LLM（大模型分析潜在卖/买家，与 Nexus 配置命名一致）
+    DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    DEEPSEEK_API_BASE: str = (
+        os.getenv("DEEPSEEK_API_BASE", "").strip()
+        or os.getenv("LLM_API_BASE", "https://api.deepseek.com").strip()
+        or "https://api.deepseek.com"
+    )
+    DEEPSEEK_ENABLE_SEARCH: bool = _bool(os.getenv("DEEPSEEK_ENABLE_SEARCH", "false"))
+
 
 settings = Settings()
 

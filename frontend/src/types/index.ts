@@ -98,3 +98,49 @@ export interface PlatformStats {
   avg_likes: number;
   avg_comments: number;
 }
+
+/** 大模型分析：联系方式汇总单条 */
+export interface ContactSummary {
+  author_id: string;
+  platform: string;
+  contact_type: string;
+  value: string;
+  source: string;
+}
+
+/** 大模型分析：潜在卖家 */
+export interface PotentialSeller {
+  author_id: string;
+  author_name: string;
+  platform: string;
+  reason: string;
+  source_post_id: string;
+  contacts: string[];
+}
+
+/** 大模型分析：潜在买家（intent_level: explicit_inquiry | interested | sharing_only | unknown） */
+export interface PotentialBuyer {
+  author_id: string;
+  author_name: string;
+  platform: string;
+  intent_level: string;
+  reason: string;
+  source_post_id: string;
+  contacts: string[];
+}
+
+/** 大模型潜在卖/买家分析结果 */
+export interface LlmLeadsResult {
+  potential_sellers: PotentialSeller[];
+  potential_buyers: PotentialBuyer[];
+  contacts_summary: ContactSummary[];
+  analysis_summary?: string | null;
+}
+
+/** 大模型分析场景（与后端 GET /api/analysis/llm-scenarios 一致） */
+export interface LlmScenario {
+  id: string;
+  name: string;
+  seller_label: string;
+  buyer_label: string;
+}

@@ -69,3 +69,50 @@ class SearchResponse(BaseModel):
     by_platform: Dict[str, int] = Field(default_factory=dict)
     progress: Optional[int] = None
     message: str = ""
+
+
+# --- LLM Leads Analysis API ---
+
+class ContactSummary(BaseModel):
+    """单条联系方式（由 LLM 从正文/评论抽取）。"""
+    author_id: str = ""
+    platform: str = ""
+    contact_type: str = ""  # wechat | phone | private_message | other
+    value: str = ""
+    source: str = ""  # post_content | comment | signature 等
+
+
+class PotentialSeller(BaseModel):
+    """潜在卖家条目。"""
+    author_id: str = ""
+    author_name: str = ""
+    platform: str = ""
+    reason: str = ""
+    source_post_id: str = ""
+    contacts: List[str] = Field(default_factory=list)
+
+
+class PotentialBuyer(BaseModel):
+    """潜在买家条目。intent_level: explicit_inquiry | interested | sharing_only | unknown"""
+    author_id: str = ""
+    author_name: str = ""
+    platform: str = ""
+    intent_level: str = ""
+    reason: str = ""
+    source_post_id: str = ""
+    contacts: List[str] = Field(default_factory=list)
+
+
+class LlmLeadsRequest(BaseModel):
+    """POST /api/analysis/llm-leads 可选 body：帖子列表（与 task_id 二选一）、模型、场景。"""
+    posts: Optional[List[UnifiedPost]] = None
+    model: Optional[str] = None  # 如 deepseek-chat
+    scene: Optional[str] = None  # 分析场景 id，见 GET /api/analysis/llm-scenarios
+
+
+class LlmLeadsResult(BaseModel):
+    """大模型潜在卖/买家分析结果。"""
+    potential_sellers: List[PotentialSeller] = Field(default_factory=list)
+    potential_buyers: List[PotentialBuyer] = Field(default_factory=list)
+    contacts_summary: List[ContactSummary] = Field(default_factory=list)
+    analysis_summary: Optional[str] = None

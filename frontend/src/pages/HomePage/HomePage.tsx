@@ -7,6 +7,7 @@ import { LogStream } from '../../components/LogStream/LogStream';
 import { ResultList } from '../../components/ResultList/ResultList';
 import { DetailModal } from '../../components/DetailModal/DetailModal';
 import { AnalysisModal } from '../../components/AnalysisModal/AnalysisModal';
+import { LlmAnalysisModal } from '../../components/LlmAnalysisModal/LlmAnalysisModal';
 import { NotificationModal } from '../../components/NotificationModal/NotificationModal';
 import { ExportMenu } from '../../components/ExportMenu/ExportMenu';
 import { BatchActions } from '../../components/BatchActions/BatchActions';
@@ -67,6 +68,7 @@ export const HomePage: React.FC = () => {
     }
   };
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isLlmModalOpen, setIsLlmModalOpen] = useState(false);
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     message: string;
@@ -480,6 +482,12 @@ export const HomePage: React.FC = () => {
                   >
                     📊 数据分析
                   </PixelButton>
+                  <PixelButton
+                    onClick={() => setIsLlmModalOpen(true)}
+                    variant="primary"
+                  >
+                    🤖 大模型分析
+                  </PixelButton>
                 </div>
               </>
             )}
@@ -492,6 +500,12 @@ export const HomePage: React.FC = () => {
                   variant="primary"
                 >
                   📊 数据分析（基于当前结果或历史记录）
+                </PixelButton>
+                <PixelButton
+                  onClick={() => setIsLlmModalOpen(true)}
+                  variant="primary"
+                >
+                  🤖 大模型分析
                 </PixelButton>
               </div>
             )}
@@ -516,6 +530,13 @@ export const HomePage: React.FC = () => {
         taskId={taskId}
         posts={results}
         historyRecords={historyRecords}
+      />
+
+      <LlmAnalysisModal
+        isOpen={isLlmModalOpen}
+        onClose={() => setIsLlmModalOpen(false)}
+        initialPosts={results}
+        initialTaskId={taskId}
       />
 
       <NotificationModal

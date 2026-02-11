@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Analysis API: stats, distribution, trends, top-authors (match frontend)."""
+"""Analysis API: stats, distribution, trends, top-authors, llm-leads (match frontend)."""
+import logging
 import re
 from collections import Counter
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.schemas import UnifiedPost
+from app.schemas import LlmLeadsRequest, LlmLeadsResult, UnifiedPost
+from app.services.llm_analysis import SCENARIOS, run_llm_leads_analysis
 from app.services.task_manager import task_manager
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
+logger = logging.getLogger(__name__)
 
 
 def _post_content_type(p: UnifiedPost) -> str:
@@ -182,3 +185,55 @@ async def analysis_top_posts(
             "content_type": _post_content_type(p),
         })
     return out
+
+
+@router.get("/llm-scenarios")
+async def get_llm_scenarios():
+    """返回大模型分析可选场景列表，供前端下拉选择。"""
+    return [
+        {"id": sid, "name": info["name"], "seller_label": info["seller_label"], "buyer_label": info["buyer_label"]}
+        for sid, info in SCENARIOS.items()
+    ]
+
+
+@router.post("/llm-leads", response_model=LlmLeadsResult)
+async def analysis_llm_leads(
+    task_id: Optional[str] = Query(None, alias="task_id"),
+    body: Optional[LlmLeadsRequest] = None,
+):
+    """
+    大模型分析潜在卖家/买家并整理联系方式。
+    数据来源二选一：body.posts（当前结果或历史记录列表）或 task_id（当前任务结果）。
+    """
+    posts: List[UnifiedPost] = []
+    if body and body.posts and len(body.posts) > 0:
+        posts = body.posts
+        logger.info("[llm-leads] 请求来源: body.posts, 帖子数=%d", len(posts))
+    elif task_id:
+        t = task_manager.get_task(task_id)
+        if not t:
+            logger.warning("[llm-leads] task_id=%s 未找到", task_id)
+            raise HTTPException(status_code=404, detail="task not found")
+        posts = t.results or []
+        logger.info("[llm-leads] 请求来源: task_id=%s, 帖子数=%d", task_id, len(posts))
+    else:
+        logger.warning("[llm-leads] 未提供 task_id 或 body.posts")
+        raise HTTPException(
+            status_code=400,
+            detail="请提供 task_id 或 body.posts 作为数据来源",
+        )
+    model_name = (body.model if body else None) or "deepseek-chat"
+    scene = (body.scene if body else None) or None
+    logger.info("[llm-leads] 开始分析, model=%s, scene=%s", model_name, scene)
+    try:
+        result = run_llm_leads_analysis(posts, model=model_name, scene=scene)
+        logger.info(
+            "[llm-leads] 分析完成, 潜在卖家=%d, 潜在买家=%d, 联系方式=%d",
+            len(result.potential_sellers),
+            len(result.potential_buyers),
+            len(result.contacts_summary),
+        )
+        return result
+    except ValueError as e:
+        logger.warning("[llm-leads] 分析失败: %s", e)
+        raise HTTPException(status_code=400, detail=str(e))

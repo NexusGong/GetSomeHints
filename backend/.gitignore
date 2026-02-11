@@ -7,3 +7,6 @@ venv/
 
 # Playwright browser data (do not commit)
 browser_data/
+
+# 本地 Cookie，勿提交
+douyin_cookie.txt

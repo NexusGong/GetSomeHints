@@ -1,8 +1,9 @@
 /**
  * 导出工具函数
- * 支持 CSV、Excel、JSON 格式导出
+ * 支持 CSV、Excel、JSON 格式导出（搜索结果 + 大模型分析）
  */
 import type { UnifiedPost } from '../types';
+import type { LlmAnalysisRecord } from '../stores/llmAnalysisStore';
 
 /**
  * 导出为 CSV 格式
@@ -134,4 +135,125 @@ ${post.content ? `内容: ${post.content.substring(0, 200)}${post.content.length
     console.error('复制失败:', error);
     return false;
   }
+};
+
+// ---------- 大模型分析导出 ----------
+
+const escapeCSVCell = (v: unknown): string => {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
+/**
+ * 导出大模型分析结果为 CSV（扁平表：每行一条卖家/买家/联系方式）
+ */
+export const exportLlmAnalysisToCSV = (
+  records: LlmAnalysisRecord[],
+  filename: string = 'llm_analysis'
+) => {
+  if (records.length === 0) {
+    alert('没有分析数据可导出');
+    return;
+  }
+  const headers = [
+    '分析名称',
+    '创建时间',
+    '模型',
+    '数据量',
+    '场景',
+    '类型',
+    '主体展示',
+    '平台号或ID',
+    '平台',
+    '理由或意向或联系类型',
+    '联系方式或值',
+    '来源',
+  ];
+  const rows: string[][] = [];
+  for (const rec of records) {
+    const sceneName = rec.sceneName ?? rec.scene ?? '—';
+    const created = rec.createdAt ? new Date(rec.createdAt).toLocaleString('zh-CN') : '—';
+    for (const s of rec.result.potential_sellers) {
+      const display = (s.author_name && s.author_id) ? `${s.author_name}（${s.author_id}）` : (s.author_name || s.author_id || '—');
+      rows.push([
+        rec.name,
+        created,
+        rec.model,
+        String(rec.postsCount),
+        sceneName,
+        rec.sellerLabel ?? '潜在卖家',
+        display,
+        s.author_id,
+        s.platform,
+        s.reason,
+        (s.contacts || []).join('; '),
+        s.source_post_id,
+      ].map(escapeCSVCell));
+    }
+    for (const b of rec.result.potential_buyers) {
+      const display = (b.author_name && b.author_id) ? `${b.author_name}（${b.author_id}）` : (b.author_name || b.author_id || '—');
+      rows.push([
+        rec.name,
+        created,
+        rec.model,
+        String(rec.postsCount),
+        sceneName,
+        rec.buyerLabel ?? '潜在买家',
+        display,
+        b.author_id,
+        b.platform,
+        (b.intent_level || '') + ' ' + (b.reason || ''),
+        (b.contacts || []).join('; '),
+        b.source_post_id,
+      ].map(escapeCSVCell));
+    }
+    for (const c of rec.result.contacts_summary) {
+      rows.push([
+        rec.name,
+        created,
+        rec.model,
+        String(rec.postsCount),
+        sceneName,
+        '联系方式',
+        c.author_id || '—',
+        '',
+        c.platform,
+        c.contact_type,
+        c.value,
+        c.source || '',
+      ].map(escapeCSVCell));
+    }
+  }
+  const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * 导出大模型分析结果为 JSON
+ */
+export const exportLlmAnalysisToJSON = (
+  records: LlmAnalysisRecord[],
+  filename: string = 'llm_analysis'
+) => {
+  if (records.length === 0) {
+    alert('没有分析数据可导出');
+    return;
+  }
+  const jsonContent = JSON.stringify(records, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
 };

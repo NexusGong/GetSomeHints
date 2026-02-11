@@ -1,6 +1,6 @@
 # GetSomeHints
 
-多平台爬虫搜索：按关键词与条件对多平台（目前是小红书、抖音，快手、B站、微博、贴吧、知乎等暂停开发）抓取帖子、视频、图文、评论等；内置代理池与防封策略。
+多平台爬虫搜索：按关键词与条件对多平台（目前是小红书、抖音，快手、B站、微博、贴吧、知乎等暂停开发）抓取帖子、视频、图文、评论等；内置代理池与防封策略。支持**大模型分析**：对爬取结果选择场景（潜在买家/卖家、潜在热销品、热度话题）调用 DeepSeek 做线索与趋势分析。
 
 **当前版本**：抖音、小红书使用 Playwright + 登录态 + 代理池，安装 Playwright 后为真实抓取；其余平台为示例桩。
 
@@ -22,7 +22,7 @@ conda activate getsomehints
 cd backend && pip install -r requirements.txt
 ```
 
-复制 `backend/.env.example` 为 `backend/.env`，按需填写（见下方代理配置、Playwright 配置）。
+复制 `backend/.env.example` 为 `backend/.env`，按需填写（见下方代理配置、Playwright 配置、大模型分析配置）。
 
 ## 运行
 
@@ -58,6 +58,7 @@ cd backend && pip install -r requirements.txt
 
 - **当前任务**：后端内存，`GET /api/search/results/{task_id}`；前端轮询，结束后写入历史。
 - **历史**：前端 localStorage（`getsomehints-history`），无单独库/文件。
+- **大模型分析**：前端 localStorage（`getsomehints-llm-analysis`），侧边栏「大模型分析」页展示列表；点开单条分析卡片可查看详情并**导出 CSV/JSON**。
 
 ---
 
@@ -90,15 +91,46 @@ cd backend && pip install -r requirements.txt
 | POST | /api/analysis/stats | analysisApi.getStats |
 | POST | /api/analysis/distribution | analysisApi.getDistribution |
 | POST | /api/analysis/trends | analysisApi.getTrends |
+| POST | /api/analysis/top-posts | analysisApi.getTopPosts |
 | POST | /api/analysis/top-authors | analysisApi.getTopAuthors |
+| GET | /api/analysis/llm-scenarios | analysisApi.getLlmScenarios |
+| POST | /api/analysis/llm-leads | analysisApi.runLlmLeadsAnalysis |
 
-以上 POST 均带 Query：`task_id`（必填）；top-authors 另有 `limit`（默认 10）。Response 类型见前端 `types/index.ts`（AnalysisStats、平台分布、趋势、热门作者）。
+- 以上 POST（除 llm-leads）均带 Query：`task_id`（必填）；top-authors 另有 `limit`（默认 10）。Response 类型见前端 `types/index.ts`（AnalysisStats、平台分布、趋势、热门作者、高互动帖子）。
+- **GET /api/analysis/llm-scenarios**：返回大模型分析场景列表（id, name, seller_label, buyer_label），供前端下拉选择。
+- **POST /api/analysis/llm-leads**：大模型分析。可选 Query：`task_id`；或 Body：`posts`（帖子列表）、`model`（默认 deepseek-chat）、`scene`（场景 id）。Response：`LlmLeadsResult`（potential_sellers, potential_buyers, contacts_summary, analysis_summary）。需在 `backend/.env` 中配置 `DEEPSEEK_API_KEY`（见下方大模型分析配置）。
 
 ### 其他
 
 - **GET /api/health**：`{ "status": "ok" }`
 - **GET /api/config/proxy**：代理配置状态（不含密钥）
 - **WebSocket /api/ws/logs**：实时日志流
+
+---
+
+## 大模型分析
+
+对爬取结果（当前任务或历史记录）按场景调用 DeepSeek 做结构化分析，结果保存在侧边栏「大模型分析」页；点开单条分析卡片可查看详情并**导出 CSV / JSON**。
+
+### 场景
+
+| 场景 id | 说明 |
+|---------|------|
+| sell_buy | 潜在买家/卖家：识别推广/留联系方式的账号与询价、种草等意向用户 |
+| hot_products | 潜在热销品：识别多帖提及、求链接、种草集中的商品/品类 |
+| hot_topics | 热度话题：识别讨论集中、声量大的话题/关键词/事件 |
+
+涉及联系方式时，主体以「昵称（平台号）」完整展示（如 张三（抖音号））。
+
+### 配置（backend/.env）
+
+| 变量 | 说明 | 默认 |
+|------|------|------|
+| DEEPSEEK_API_KEY | DeepSeek API Key | 空（未配置时分析接口返回 400） |
+| DEEPSEEK_API_BASE | API 地址 | https://api.deepseek.com |
+| DEEPSEEK_ENABLE_SEARCH | 是否开启联网搜索 | false |
+
+后端使用 **httpx** 请求 `{DEEPSEEK_API_BASE}/v1/chat/completions`，超时 90 秒；日志前缀 `[LLM分析]`、`[llm-leads]` 便于排查。
 
 ---
 
