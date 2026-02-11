@@ -1,6 +1,6 @@
 # GetSomeHints
 
-多平台爬虫搜索：按关键词与条件对多平台（小红书、抖音、快手、B站、微博、贴吧、知乎等）抓取帖子、视频、图文、评论等；内置代理池与防封策略。
+多平台爬虫搜索：按关键词与条件对多平台（目前是小红书、抖音，快手、B站、微博、贴吧、知乎等暂停开发）抓取帖子、视频、图文、评论等；内置代理池与防封策略。
 
 **当前版本**：抖音、小红书使用 Playwright + 登录态 + 代理池，安装 Playwright 后为真实抓取；其余平台为示例桩。
 
@@ -33,6 +33,18 @@ cd backend && pip install -r requirements.txt
 | `./start_all.sh` | 先后台后端再前台前端；Ctrl+C 一并结束 |
 
 或手动：`cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000`；另开终端 `cd frontend && npm run dev`。浏览器访问 http://localhost:5173，API 为 http://127.0.0.1:8000。
+
+### 一键部署（空环境，点开链接即用）
+
+适用于**没有任何环境**的 Windows 或 Linux：自动安装/检测 Python、Node，安装依赖并启动服务，最后打开浏览器。
+
+| 系统 | 操作 |
+|------|------|
+| **Linux** | 在项目根目录执行：`bash scripts/oneclick-linux.sh`（Debian/Ubuntu 等会提示安装 python3、node、npm） |
+| **Windows** | 双击运行 `scripts\oneclick-windows.bat`，或在项目根目录打开 PowerShell 执行：<br>`powershell -ExecutionPolicy Bypass -File scripts\oneclick-windows.ps1` |
+
+完成后终端会提示访问 **http://localhost:5173**，浏览器一般会自动打开；未打开则手动粘贴该链接即可使用。  
+停止服务：Linux 执行 `kill $(cat .backend.pid) $(cat .frontend.pid)`；Windows 在任务管理器中结束对应 python/node 进程。
 
 ### 排查（无反应 / 后端无日志）
 
