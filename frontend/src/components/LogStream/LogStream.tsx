@@ -34,6 +34,14 @@ export const LogStream: React.FC<LogStreamProps> = ({
 
     const unsubLog = websocketService.subscribe((log) => {
       setLogs((prev) => {
+        if (log.replaceId) {
+          const idx = prev.findIndex((e) => (e as LogEntry & { replaceId?: string }).replaceId === log.replaceId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...log, replaceId: log.replaceId };
+            return next.slice(-maxLines);
+          }
+        }
         const newLogs = [...prev, log];
         return newLogs.slice(-maxLines);
       });
@@ -116,7 +124,7 @@ export const LogStream: React.FC<LogStreamProps> = ({
               logs
                 .filter(log => log.message !== 'heartbeat' && log.message !== 'pong') // 过滤心跳消息
                 .map((log, index) => (
-                  <div key={index} className={`log-entry ${getLogLevelClass(log.level)}`}>
+                  <div key={(log as LogEntry & { replaceId?: string }).replaceId ?? `log-${index}`} className={`log-entry ${getLogLevelClass(log.level)}`}>
                     <span className="log-time">[{formatTime(log.timestamp)}]</span>
                     {log.platform && (
                       <span className="log-platform">[{log.platform}]</span>

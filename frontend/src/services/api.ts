@@ -103,6 +103,16 @@ export const analysisApi = {
       headers: { 'Content-Type': 'application/json' }
     });
   },
+
+  /**
+   * 获取高互动帖子（按点赞或评论排序），供决策参考
+   */
+  getTopPosts: async (taskId: string, limit: number = 10, sortBy: 'likes' | 'comments' = 'likes'): Promise<any[]> => {
+    return api.post('/api/analysis/top-posts', null, {
+      params: { task_id: taskId, limit, sort_by: sortBy },
+      headers: { 'Content-Type': 'application/json' },
+    });
+  },
 };
 
 export default api;

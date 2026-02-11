@@ -1,0 +1,6 @@
+2026/02/11-16:41:21.228 3a03 Reusing MANIFEST /Users/nexusg/PycharmProject/GetSomeHints/backend/browser_data/dy_user_data_dir/Default/Local Storage/leveldb/MANIFEST-000001
+2026/02/11-16:41:21.230 3a03 Recovering log #7
+2026/02/11-16:41:21.230 3a03 Reusing old log /Users/nexusg/PycharmProject/GetSomeHints/backend/browser_data/dy_user_data_dir/Default/Local Storage/leveldb/000007.log 
+2026/02/11-16:41:29.050 3103 Level-0 table #11: started
+2026/02/11-16:41:29.056 3103 Level-0 table #11: 38820 bytes OK
+2026/02/11-16:41:29.065 3103 Delete type=0 #7

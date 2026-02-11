@@ -17,16 +17,13 @@ logger = logging.getLogger(__name__)
 @router.post("/start", response_model=SearchResponse)
 async def search_start(body: SearchStartRequest):
     """Start a search task; returns task_id and initial status."""
-    from app.debug_log import debug_log
-    debug_log(f"[Search] POST /start received keywords={body.keywords!r} platforms={body.platforms}")
-    logger.info("search_start keywords=%r platforms=%s", body.keywords, body.platforms)
     if not body.keywords or not body.keywords.strip():
         raise HTTPException(status_code=400, detail="keywords required")
     if not body.platforms:
         raise HTTPException(status_code=400, detail="at least one platform required")
 
+    logger.info("搜索请求 关键词=%s 平台=%s max_count=%s", body.keywords.strip(), body.platforms, body.max_count or 100)
     task_id = task_manager.create_task()
-    debug_log(f"[Search] task_id={task_id[:8]}... background task starting")
     start_search_background(
         task_id=task_id,
         keywords=body.keywords.strip(),
@@ -37,7 +34,7 @@ async def search_start(body: SearchStartRequest):
         time_range=body.time_range or "all",
         content_types=body.content_types,
     )
-    # 让出事件循环，确保后台任务已启动并写入 debug 日志
+    # 让出事件循环，确保后台任务已启动
     await asyncio.sleep(0)
     resp = task_manager.get_status_response(task_id) or {}
     return SearchResponse(

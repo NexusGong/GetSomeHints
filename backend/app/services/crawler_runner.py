@@ -6,7 +6,7 @@ from typing import List
 
 from app.config import settings
 from app.services.task_manager import task_manager
-from app.services.ws_broadcast import broadcast
+from app.services.ws_broadcast import broadcast, drain_pending_logs
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +27,12 @@ async def run_search_task(
     Background task: run crawlers for each platform, update task_manager.
     Serial execution (MAX_CONCURRENCY_NUM=1). Current crawlers are stubs (no Playwright).
     """
-    from app.debug_log import debug_log
-    debug_log(f"[Crawler] run_search_task started task_id={task_id[:8]}... platforms={platforms}")
-    logger.info("[Crawler] run_search_task started task_id=%s platforms=%s", task_id[:8], platforms)
     await task_manager.set_running(task_id)
-    await broadcast("开始爬取", "info")
+    platform_names = "、".join(PLATFORM_LABEL.get(p, p) for p in platforms)
+    await broadcast("搜索开始：关键词「%s」 平台 %s" % (keywords, platform_names), "info")
+    logger.info("搜索开始 task_id=%s 关键词=%s 平台=%s max_count=%d", task_id[:8], keywords, platforms, max_count)
     total = 0
     by_platform: dict = {p: 0 for p in platforms}
-    logger.info("[Crawler] task_id=%s keywords=%r platforms=%s", task_id[:8], keywords, platforms)
 
     # 单平台搜索超时（秒），避免 MC 浏览器/登录卡住导致任务一直 running
     SEARCH_TIMEOUT = 600
@@ -64,43 +62,116 @@ async def run_search_task(
             try:
                 from app.crawler.registry import get_crawler
                 crawler_cls = get_crawler(platform)
-                logger.info("[Crawler] platform=%s crawler_cls=%s", platform, crawler_cls)
                 if crawler_cls:
                     platform_label = PLATFORM_LABEL.get(platform, platform)
                     await broadcast(f"开始爬取 {platform_label}...", "info", platform=platform_label)
-                    crawler = crawler_cls(proxy_pool=proxy_pool)
-                    try:
-                        posts = await asyncio.wait_for(
-                            crawler.search(
-                                keywords=keywords,
-                                max_count=min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
-                                time_range=time_range,
-                                content_types=content_types or ["video", "image_text", "link"],
-                            ),
-                            timeout=SEARCH_TIMEOUT,
+                    logger.info("开始爬取 %s…", platform_label)
+                    posts = []
+                    if platform == "dy":
+                        from app.crawler.douyin import (
+                            _run_douyin_sync_in_thread,
+                            _aweme_to_unified_post,
+                            _comment_to_unified,
                         )
-                    except asyncio.TimeoutError:
-                        logger.warning("[Crawler] platform=%s search timeout after %ss", platform, SEARCH_TIMEOUT)
-                        raise RuntimeError(f"平台 {platform} 搜索超时（{SEARCH_TIMEOUT}秒），请检查浏览器/登录是否卡住")
+                        task = asyncio.create_task(
+                            asyncio.to_thread(
+                                _run_douyin_sync_in_thread,
+                                keywords,
+                                min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
+                                20,
+                                time_range,
+                                content_types or ["video", "image_text", "link"],
+                            )
+                        )
+                        while not task.done():
+                            for item in drain_pending_logs():
+                                msg, level, plat = item[0], item[1], item[2]
+                                rid = item[3] if len(item) > 3 else None
+                                await broadcast(msg, level, plat, rid)
+                            await asyncio.sleep(0.4)
+                        try:
+                            notes_list, comments_list = task.result()
+                        except Exception as e:
+                            raise e
+                        posts = [_aweme_to_unified_post(n) for n in notes_list]
+                        comment_map = {}
+                        for aweme_id, c in comments_list:
+                            aid = str(aweme_id)
+                            comment_map.setdefault(aid, []).append(_comment_to_unified(aid, c))
+                        for p in posts:
+                            p.platform_data.setdefault("comments", [])
+                            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
+                        posts = posts[: min(max_count, settings.CRAWLER_MAX_NOTES_COUNT)]
+                    elif platform == "xhs":
+                        from app.crawler.xhs import (
+                            _run_xhs_sync_in_thread,
+                            _note_to_unified_post,
+                            _comment_to_unified,
+                        )
+                        task = asyncio.create_task(
+                            asyncio.to_thread(
+                                _run_xhs_sync_in_thread,
+                                keywords,
+                                min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
+                                enable_comments,
+                                20 if enable_comments else 0,
+                                content_types or ["video", "image_text", "link"],
+                            )
+                        )
+                        while not task.done():
+                            for item in drain_pending_logs():
+                                msg, level, plat = item[0], item[1], item[2]
+                                rid = item[3] if len(item) > 3 else None
+                                await broadcast(msg, level, plat, rid)
+                            await asyncio.sleep(0.4)
+                        try:
+                            notes_list, comments_list = task.result()
+                        except Exception as e:
+                            raise e
+                        posts = [_note_to_unified_post(n) for n in notes_list]
+                        comment_map = {}
+                        for nid, c in comments_list:
+                            comment_map.setdefault(nid, []).append(_comment_to_unified(nid, c))
+                        for p in posts:
+                            p.platform_data.setdefault("comments", [])
+                            p.platform_data["comments"] = [c.model_dump() for c in comment_map.get(p.post_id, [])]
+                        posts = posts[: min(max_count, settings.CRAWLER_MAX_NOTES_COUNT)]
+                    else:
+                        crawler = crawler_cls(proxy_pool=proxy_pool)
+                        try:
+                            posts = await asyncio.wait_for(
+                                crawler.search(
+                                    keywords=keywords,
+                                    max_count=min(max_count, settings.CRAWLER_MAX_NOTES_COUNT),
+                                    time_range=time_range,
+                                    content_types=content_types or ["video", "image_text", "link"],
+                                ),
+                                timeout=SEARCH_TIMEOUT,
+                            )
+                        except asyncio.TimeoutError:
+                            logger.warning("[Crawler] platform=%s search timeout after %ss", platform, SEARCH_TIMEOUT)
+                            raise RuntimeError(f"平台 {platform} 搜索超时（{SEARCH_TIMEOUT}秒），请检查浏览器/登录是否卡住")
                     if posts:
                         await task_manager.append_results(task_id, posts)
                         count = len(posts)
                         by_platform[platform] = count
                         total += count
-                        logger.info("[Crawler] %s got %d posts", platform, count)
                         await broadcast(f"{platform_label} 已获取 {count} 条", "success", platform=platform_label)
+                        logger.info("%s 已获取 %d 条", platform_label, count)
                     else:
                         await broadcast(f"{platform_label} 本页无新结果", "info", platform=platform_label)
+                        logger.info("%s 本页无新结果", platform_label)
                     consecutive_failures = 0
                 else:
-                    logger.info("[Crawler] no crawler for platform %s", platform)
+                    pass
                 idx = platforms.index(platform) + 1
                 progress = int(100 * idx / len(platforms)) if platforms else 0
                 await task_manager.set_progress(task_id, total, by_platform, progress=progress)
             except Exception as e:
                 logger.exception("[Crawler] platform %s failed: %s", platform, e)
                 platform_label = PLATFORM_LABEL.get(platform, platform)
-                await broadcast(f"{platform_label} 爬取失败: {e!s}", "error", platform=platform_label)
+                await broadcast("%s 爬取失败: %s" % (platform_label, e), "error", platform=platform_label)
+                logger.warning("%s 爬取失败: %s", platform_label, e)
                 consecutive_failures += 1
                 if proxy_pool:
                     proxy_pool.invalidate_current()
@@ -110,11 +181,11 @@ async def run_search_task(
                     break
 
         await task_manager.set_completed(task_id, total, by_platform)
-        logger.info("[Crawler] task_id=%s completed total=%d by_platform=%s", task_id[:8], total, by_platform)
-        await broadcast(f"爬取结束，共 {total} 条", "success")
+        await broadcast("爬取结束，共 %d 条" % total, "success")
+        logger.info("爬取结束 task_id=%s 共 %d 条 %s", task_id[:8], total, by_platform)
     except asyncio.CancelledError:
-        logger.info("[Crawler] task_id=%s stopped", task_id[:8])
         await task_manager.set_stopped(task_id)
+        logger.info("搜索已取消 task_id=%s", task_id[:8])
     except Exception as e:
         logger.exception("[Crawler] task_id=%s failed: %s", task_id[:8], e)
         await task_manager.set_failed(task_id, str(e))

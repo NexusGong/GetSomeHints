@@ -1,32 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Xiaohongshu (xhs) crawler. Uses anti-block; real data via MediaCrawler bundle (Playwright + login)."""
+"""小红书爬虫。使用 app.xhs_crawler（不依赖 mediacrawler_bundle）。"""
 from __future__ import annotations
 
 import asyncio
 import os
-import sys
-from pathlib import Path
 from typing import List, Optional
 
 from app.crawler.base import BaseCrawler
 from app.schemas import UnifiedPost, UnifiedAuthor, UnifiedComment
 
-# 是否已尝试加载 bundle（避免重复插入 path）
-_bundle_path_checked: Optional[Path] = None
-
-
-def _bundle_dir() -> Optional[Path]:
-    """mediacrawler_bundle 目录（backend/mediacrawler_bundle）。"""
-    global _bundle_path_checked
-    backend = Path(__file__).resolve().parent.parent.parent
-    bundle = backend / "mediacrawler_bundle"
-    if not bundle.is_dir():
-        return None
-    return bundle
-
 
 def _note_to_unified_post(note_item: dict) -> UnifiedPost:
-    """将 MediaCrawler 的 note 字典转为 UnifiedPost。"""
+    """将 xhs_crawler 的 note 字典转为 UnifiedPost。"""
     user = note_item.get("user") or {}
     interact = note_item.get("interact_info") or {}
     note_id = note_item.get("note_id", "")
@@ -81,7 +66,7 @@ def _note_to_unified_post(note_item: dict) -> UnifiedPost:
 
 
 def _comment_to_unified(note_id: str, comment_item: dict) -> UnifiedComment:
-    """将 MC 的 (note_id, comment_item) 转为 UnifiedComment。"""
+    """将 (note_id, comment_item) 转为 UnifiedComment。"""
     user = comment_item.get("user_info") or {}
     cid = comment_item.get("id", "")
     if isinstance(cid, (int, float)):
@@ -112,63 +97,61 @@ def _comment_to_unified(note_id: str, comment_item: dict) -> UnifiedComment:
     )
 
 
-async def _run_mediacrawler_xhs_search(
+def _content_types_to_note_type(content_types: Optional[List[str]]) -> str:
+    """前端 content_types 映射到小红书 MC_NOTE_TYPE: video | image | all。"""
+    if not content_types or len(content_types) == 0:
+        return "all"
+    types = [t.lower() for t in content_types]
+    if types == ["video"]:
+        return "video"
+    if types == ["image_text"]:
+        return "image"
+    return "all"
+
+
+def _run_xhs_sync_in_thread(
     keywords: str,
     max_count: int,
     enable_comments: bool,
     max_comments_per_note: int,
-) -> tuple[List[dict], List[tuple]]:
-    """在 bundle 中运行 MC 小红书搜索，返回 (notes, comments_list)。Playwright、登录态、代理池见 docs/playwright_login.md。"""
-    bundle = _bundle_dir()
-    if not bundle:
-        return [], []
+    content_types: Optional[List[str]] = None,
+) -> tuple[list, list]:
+    """在单独线程中运行小红书 MC 搜索，返回 (notes_list, comments_list)。"""
+    notes_list: List[dict] = []
+    comments_list: List[tuple] = []
+
+    os.environ["MC_PLATFORM"] = "xhs"
+    os.environ["MC_KEYWORDS"] = keywords.strip() or "热门"
+    os.environ["MC_CRAWLER_TYPE"] = "search"
+    os.environ["MC_NOTE_TYPE"] = _content_types_to_note_type(content_types)
+    os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(20, min(max_count, 100)))
+    os.environ["ENABLE_GET_COMMENTS"] = "true" if enable_comments else "false"
+    os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))
+    os.environ["ENABLE_GET_SUB_COMMENTS"] = "false"
+    os.environ.setdefault("MC_LOGIN_TYPE", "qrcode")
+    os.environ.setdefault("MC_HEADLESS", "false")
+    os.environ.setdefault("MC_SAVE_LOGIN_STATE", "true")
+    os.environ.setdefault("MC_SORT_TYPE", "general")
 
     from app.config import settings
-    old_cwd = os.getcwd()
-    old_path = list(sys.path)
+    os.environ["ENABLE_IP_PROXY"] = "true" if settings.ENABLE_IP_PROXY else "false"
+    os.environ["IP_PROXY_POOL_COUNT"] = str(settings.IP_PROXY_POOL_COUNT)
+
+    from app.xhs_crawler import set_collector, XiaoHongShuCrawler
+    set_collector(notes_list, comments_list)
+    crawler = XiaoHongShuCrawler()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        os.chdir(str(bundle))
-        if str(bundle) not in sys.path:
-            sys.path.insert(0, str(bundle))
-
-        os.environ["MC_PLATFORM"] = "xhs"
-        os.environ["MC_KEYWORDS"] = keywords.strip() or "热门"
-        os.environ["MC_CRAWLER_TYPE"] = "search"
-        os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(20, min(max_count, 100)))
-        os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))
-        os.environ["ENABLE_IP_PROXY"] = "true" if settings.ENABLE_IP_PROXY else "false"
-        os.environ["IP_PROXY_POOL_COUNT"] = str(settings.IP_PROXY_POOL_COUNT)
-        if "MC_LOGIN_TYPE" not in os.environ:
-            os.environ["MC_LOGIN_TYPE"] = "qrcode"
-        if "MC_HEADLESS" not in os.environ:
-            os.environ["MC_HEADLESS"] = "false"
-        if "MC_SAVE_LOGIN_STATE" not in os.environ:
-            os.environ["MC_SAVE_LOGIN_STATE"] = "true"
-        if "MC_ENABLE_CDP_MODE" not in os.environ:
-            os.environ["MC_ENABLE_CDP_MODE"] = "false"
-
-        # 让 config 重新加载
-        for mod in list(sys.modules.keys()):
-            if mod in ("config", "config.base_config", "var", "store", "store.xhs"):
-                sys.modules.pop(mod, None)
-
-        import store.xhs as xhs_store
-        notes_list: List[dict] = []
-        comments_list: List[tuple] = []
-        xhs_store.set_collector(notes_list, comments_list)
-
-        from media_platform.xhs.core import XiaoHongShuCrawler
-        crawler = XiaoHongShuCrawler()
-        await crawler.start()
-        await crawler.close()
-        return notes_list, comments_list
+        loop.run_until_complete(crawler.start())
+        loop.run_until_complete(crawler.close())
     finally:
-        os.chdir(old_cwd)
-        sys.path[:] = old_path
+        loop.close()
+    return notes_list, comments_list
 
 
 class XiaoHongShuCrawler(BaseCrawler):
-    """XHS 爬虫：有 bundle 时走 MediaCrawler 真实抓取，否则返回示例数据。"""
+    """小红书爬虫：使用 app.xhs_crawler 真实抓取。"""
 
     async def search(
         self,
@@ -179,35 +162,16 @@ class XiaoHongShuCrawler(BaseCrawler):
         enable_comments: bool = True,
         max_comments_per_note: int = 20,
     ) -> List[UnifiedPost]:
-        """关键词搜索。有 mediacrawler_bundle 时启动浏览器并抓取，否则返回 mock。"""
-        bundle = _bundle_dir()
-        if not bundle:
-            await self._before_request()
-            return [
-                UnifiedPost(
-                    platform="xhs",
-                    post_id="xhs_mock_1",
-                    title=f"示例笔记 - {keywords}",
-                    content="这是小红书爬虫的示例结果。请先运行 backend/scripts/sync_mediacrawler.py 并安装 playwright。",
-                    author=UnifiedAuthor(author_id="author_1", author_name="示例用户", platform="xhs"),
-                    publish_time="2025-01-01T12:00:00",
-                    like_count=100,
-                    comment_count=10,
-                    share_count=5,
-                    url="https://www.xiaohongshu.com/explore/mock",
-                    image_urls=[],
-                    platform_data={},
-                ),
-            ][:max(1, min(max_count, 5))]
-
-        notes_list, comments_list = await _run_mediacrawler_xhs_search(
-            keywords=keywords,
-            max_count=max_count,
-            enable_comments=enable_comments,
-            max_comments_per_note=max_comments_per_note if enable_comments else 0,
+        """关键词搜索。由 crawler_runner 通过 to_thread 调用 _run_xhs_sync_in_thread，此处仅做同步封装供单测或直接调用。"""
+        notes_list, comments_list = await asyncio.to_thread(
+            _run_xhs_sync_in_thread,
+            keywords.strip() or "热门",
+            max(20, min(max_count, 100)),
+            enable_comments,
+            max_comments_per_note if enable_comments else 0,
+            content_types,
         )
         posts = [_note_to_unified_post(n) for n in notes_list]
-        # 按 note_id 聚合评论，写入 platform_data 便于前端展示（可选）
         comment_map: dict = {}
         for nid, c in comments_list:
             comment_map.setdefault(nid, []).append(_comment_to_unified(nid, c))
@@ -222,15 +186,14 @@ class XiaoHongShuCrawler(BaseCrawler):
         max_count: int = 20,
         enable_sub: bool = False,
     ) -> List[UnifiedComment]:
-        """获取评论。当前仅支持从上次搜索结果的 platform_data 中取；单独拉评论需 MC detail 模式。"""
+        """获取评论。当前仅支持从上次搜索结果的 platform_data 中取。"""
         await self._before_request()
-        # Stub：若后续在 search 时已把评论放进 post.platform_data["comments"]，可由上层从 results 里取
         return [
             UnifiedComment(
                 comment_id="c1",
                 post_id=post_id,
                 platform=platform or "xhs",
-                content="示例评论（单独拉评论需 MC 指定帖子 URL）",
+                content="示例评论（单独拉评论需指定帖子 URL）",
                 author=UnifiedAuthor(author_id="u1", author_name="评论用户", platform=platform or "xhs"),
                 comment_time="2025-01-01T12:00:00",
                 like_count=0,

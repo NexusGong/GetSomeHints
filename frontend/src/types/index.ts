@@ -82,6 +82,12 @@ export interface AnalysisStats {
     start?: string;
     end?: string;
   };
+  /** 内容类型分布：视频/图文/链接 */
+  content_type_distribution?: Record<string, number>;
+  /** 点赞区间分布，供决策 */
+  like_buckets?: Record<string, number>;
+  /** 评论区间分布，供决策 */
+  comment_buckets?: Record<string, number>;
 }
 
 export interface PlatformStats {

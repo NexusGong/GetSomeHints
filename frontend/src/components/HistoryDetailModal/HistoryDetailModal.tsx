@@ -229,7 +229,8 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
       <AnalysisModal
         isOpen={isAnalysisModalOpen}
         onClose={() => setIsAnalysisModalOpen(false)}
-        taskId={record.taskId}
+        taskId={record?.taskId ?? null}
+        posts={record?.results ?? []}
       />
     </>
   );

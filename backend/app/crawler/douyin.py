@@ -1,24 +1,19 @@
 # -*- coding: utf-8 -*-
-"""抖音 (dy) 爬虫。有 mediacrawler_bundle 时走 MediaCrawler 真实抓取，否则返回示例数据。"""
+"""抖音 (dy) 爬虫。使用内嵌的 douyin_crawler 逻辑，不依赖 mediacrawler_bundle。"""
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
-import sys
 from pathlib import Path
 from typing import List, Optional
+
+_user_log = logging.getLogger("app.douyin_crawler")
 
 from app.crawler.base import BaseCrawler
 from app.schemas import UnifiedPost, UnifiedAuthor, UnifiedComment
 
 logger = logging.getLogger(__name__)
-
-
-def _bundle_dir() -> Optional[Path]:
-    backend = Path(__file__).resolve().parent.parent.parent
-    bundle = backend / "mediacrawler_bundle"
-    return bundle if bundle.is_dir() else None
 
 
 def _time_range_to_publish_time_type(time_range: str) -> int:
@@ -32,22 +27,21 @@ def _run_douyin_sync_in_thread(
     max_count: int,
     max_comments_per_note: int,
     time_range: str = "all",
+    content_types: Optional[List[str]] = None,
 ) -> tuple[List[dict], List[tuple]]:
-    """在独立线程中运行 MC 抖音搜索（新建事件循环），避免阻塞主循环。"""
+    """在独立线程中运行抖音搜索（新建事件循环），避免阻塞主循环。"""
     thread_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(thread_loop)
     try:
         return thread_loop.run_until_complete(
-            _run_mediacrawler_douyin_search(
-                keywords, max_count, max_comments_per_note, time_range
-            ),
+            _run_douyin_crawler_search(keywords, max_count, max_comments_per_note, time_range, content_types),
         )
     finally:
         thread_loop.close()
 
 
 def _aweme_to_unified_post(aweme_item: dict) -> UnifiedPost:
-    """将 MC 的 aweme 字典转为 UnifiedPost。"""
+    """将 aweme 字典转为 UnifiedPost。"""
     author = aweme_item.get("author") or {}
     stats = aweme_item.get("statistics") or {}
     aweme_id = aweme_item.get("aweme_id", "")
@@ -56,7 +50,6 @@ def _aweme_to_unified_post(aweme_item: dict) -> UnifiedPost:
     avatar_url = avatar[0] if avatar else None
     create_time = aweme_item.get("create_time") or 0
     if isinstance(create_time, (int, float)) and create_time > 0:
-        # 抖音接口为秒；>=1e12 视为毫秒，转秒后存为 Unix 秒字符串，排序/展示一致
         sec = int(create_time / 1000) if create_time >= 1e12 else int(create_time)
         publish_time = str(sec)
     else:
@@ -133,90 +126,75 @@ def _comment_to_unified(aweme_id: str, comment_item: dict) -> UnifiedComment:
     )
 
 
-async def _run_mediacrawler_douyin_search(
+def _content_types_to_search_channel(content_types: Optional[List[str]]) -> str:
+    """前端 content_types 映射到抖音 search_channel：仅要视频时用 aweme_video_web，否则综合。"""
+    if not content_types:
+        return "aweme_general"
+    types = [t.lower() for t in content_types]
+    if types == ["video"] or (len(types) == 1 and "video" in types):
+        return "aweme_video_web"
+    return "aweme_general"
+
+
+async def _run_douyin_crawler_search(
     keywords: str,
     max_count: int,
     max_comments_per_note: int,
     time_range: str = "all",
+    content_types: Optional[List[str]] = None,
 ) -> tuple[List[dict], List[tuple]]:
-    """在 bundle 中运行 MC 抖音搜索，返回 (aweme_list, comments_list)。Playwright、登录态、代理池由 MC 配置（见 docs/playwright_login.md）。"""
-    bundle = _bundle_dir()
-    if not bundle:
-        logger.info("[Douyin] no mediacrawler_bundle, will return mock")
-        return [], []
+    """使用 app.douyin_crawler 运行抖音搜索，返回 (aweme_list, comments_list)。"""
     from app.config import settings
-    from app.debug_log import debug_log
-    debug_log(f"[Douyin] using bundle at {bundle}")
-    logger.info("[Douyin] using bundle at %s", bundle)
+    from app.douyin_crawler import set_collector
+    from app.douyin_crawler.core import DouYinCrawler
+    from app.services.ws_broadcast import push_log_sync
+
+    backend_dir = Path(__file__).resolve().parent.parent.parent
     old_cwd = os.getcwd()
-    old_path = list(sys.path)
     try:
-        os.chdir(str(bundle))
-        if str(bundle) not in sys.path:
-            sys.path.insert(0, str(bundle))
-        # 本次任务参数
+        os.chdir(str(backend_dir))
+        push_log_sync("正在准备搜索…", "info", "抖音")
+        _user_log.info("[抖音] 正在准备搜索…")
         os.environ["MC_PLATFORM"] = "dy"
-        os.environ["MC_KEYWORDS"] = keywords.strip() or "热门"
+        os.environ["MC_KEYWORDS"] = (keywords or "").strip() or "热门"
         os.environ["MC_CRAWLER_TYPE"] = "search"
         os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(10, min(max_count, 100)))
-        os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))
+        os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))  # noqa: E501
         os.environ["MC_PUBLISH_TIME_TYPE"] = str(_time_range_to_publish_time_type(time_range))
-        # 代理池：与 backend/.env 一致，使用 app 配置
+        os.environ["MC_SEARCH_CHANNEL"] = _content_types_to_search_channel(content_types)
         os.environ["ENABLE_IP_PROXY"] = "true" if settings.ENABLE_IP_PROXY else "false"
         os.environ["IP_PROXY_POOL_COUNT"] = str(settings.IP_PROXY_POOL_COUNT)
-        # Playwright / 登录态：未在 .env 设置时使用默认（有头、保存登录态、标准模式）
-        if "MC_LOGIN_TYPE" not in os.environ:
-            os.environ["MC_LOGIN_TYPE"] = "qrcode"
-        if "MC_HEADLESS" not in os.environ:
-            os.environ["MC_HEADLESS"] = "false"
-        if "MC_SAVE_LOGIN_STATE" not in os.environ:
-            os.environ["MC_SAVE_LOGIN_STATE"] = "true"
-        if "MC_ENABLE_CDP_MODE" not in os.environ:
-            os.environ["MC_ENABLE_CDP_MODE"] = "false"
+        os.environ.setdefault("MC_LOGIN_TYPE", "qrcode")
+        os.environ.setdefault("MC_HEADLESS", "false")
+        os.environ.setdefault("MC_SAVE_LOGIN_STATE", "true")
+        os.environ.setdefault("MC_ENABLE_CDP_MODE", "false")
+        os.environ["CRAWLER_MAX_SLEEP_SEC"] = str(max(1, getattr(settings, "CRAWLER_MAX_SLEEP_SEC", 2)))
+        os.environ["ENABLE_GET_COMMENTS"] = "true" if getattr(settings, "ENABLE_GET_COMMENTS", True) else "false"
+        os.environ["ENABLE_GET_MEIDAS"] = "false"
 
-        # 只输出关键日志：MC 内 utils.logger 名为 MediaCrawler，设为 WARNING 后仅保留关键/错误信息
-        import logging as _log
-        for _name in (
-            "MediaCrawler",
-            "tools.utils",
-            "tools",
-            "media_platform",
-            "media_platform.douyin",
-            "store",
-            "store.douyin",
-            "proxy",
-        ):
-            _log.getLogger(_name).setLevel(_log.WARNING)
-
-        for mod in list(sys.modules.keys()):
-            if mod in ("config", "config.base_config", "var", "store", "store.douyin"):
-                sys.modules.pop(mod, None)
-        logger.info("[Douyin] importing store.douyin and media_platform.douyin.core ...")
-        import store.douyin as douyin_store
         notes_list: List[dict] = []
         comments_list: List[tuple] = []
-        douyin_store.set_collector(notes_list, comments_list)
-        from media_platform.douyin.core import DouYinCrawler
+        set_collector(notes_list, comments_list)
         crawler = DouYinCrawler()
-        logger.info("[Douyin] starting MC DouYinCrawler (browser may open, please login if needed) ...")
+        push_log_sync("正在启动浏览器（如需登录请扫码）…", "info", "抖音")
+        _user_log.info("[抖音] 正在启动浏览器（如需登录请扫码）…")
         await crawler.start()
         try:
             await crawler.close()
         except Exception as close_err:
-            # 浏览器/context 可能已被关闭（如用户关窗口或 AUTO_CLOSE），不影响已爬取数据
             logger.warning("[Douyin] crawler.close() ignored: %s", close_err)
-        logger.info("[Douyin] MC finished, notes=%d comments=%d", len(notes_list), len(comments_list))
+        push_log_sync("搜索完成，共 %d 条" % len(notes_list), "success", "抖音")
+        _user_log.info("[抖音] 搜索完成，共 %d 条", len(notes_list))
         return notes_list, comments_list
     except Exception as e:
-        logger.exception("[Douyin] MC run failed: %s", e)
+        logger.exception("[Douyin] run failed: %s", e)
         raise RuntimeError(f"抖音爬虫执行失败: {e!s}") from e
     finally:
         os.chdir(old_cwd)
-        sys.path[:] = old_path
 
 
 class DouYinCrawler(BaseCrawler):
-    """抖音爬虫：有 bundle 时走 MediaCrawler，否则返回 mock。"""
+    """抖音爬虫：使用内嵌 douyin_crawler，不依赖 mediacrawler_bundle。"""
 
     async def search(
         self,
@@ -225,36 +203,14 @@ class DouYinCrawler(BaseCrawler):
         time_range: str = "all",
         content_types: Optional[List[str]] = None,
     ) -> List[UnifiedPost]:
-        bundle = _bundle_dir()
-        if not bundle:
-            from app.debug_log import debug_log
-            debug_log("[Douyin] no bundle, returning mock")
-            logger.info("[Douyin] no mediacrawler_bundle, returning mock")
-            await self._before_request()
-            return [
-                UnifiedPost(
-                    platform="dy",
-                    post_id="dy_mock_1",
-                    title=f"抖音 - {keywords}",
-                    content="抖音爬虫示例。请先运行 backend/scripts/sync_mediacrawler.py 并安装 playwright。",
-                    author=UnifiedAuthor(author_id="dy_author_1", author_name="示例用户", platform="dy"),
-                    publish_time="2025-01-01T12:00:00",
-                    like_count=88,
-                    comment_count=6,
-                    share_count=2,
-                    url="https://www.douyin.com/",
-                    image_urls=[],
-                    platform_data={},
-                ),
-            ][:max(1, min(max_count, 5))]
-
-        # 在单独线程中运行 MC，避免阻塞主事件循环（否则前端轮询 status 无响应）
+        await self._before_request()
         notes_list, comments_list = await asyncio.to_thread(
             _run_douyin_sync_in_thread,
             keywords,
             max_count,
             20,
             time_range,
+            content_types,
         )
         posts = [_aweme_to_unified_post(n) for n in notes_list]
         comment_map: dict = {}

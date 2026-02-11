@@ -10,6 +10,8 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   platform?: string;
+  /** 非空时表示本条应在原位置更新，不追加新行 */
+  replaceId?: string;
 }
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected';
@@ -77,6 +79,7 @@ class WebSocketService {
             level: data.level || 'info',
             message: data.message || data.content || '',
             platform: data.platform,
+            replaceId: data.replace_id,
           };
           this.notifyListeners(logEntry);
         } catch {

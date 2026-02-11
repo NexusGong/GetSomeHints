@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './PixelModal.css';
 
 interface PixelModalProps {
@@ -34,19 +35,22 @@ export const PixelModal: React.FC<PixelModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  return (
-    <div 
+  const modalNode = (
+    <div
       className={`pixel-modal-overlay ${isOpen ? 'is-visible' : ''}`}
       onClick={onClose}
       style={{ display: isOpen ? 'flex' : 'none' }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pixel-modal-title"
     >
       <div
         className={`pixel-modal pixel-modal-${size}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pixel-modal-header">
-          <h2 className="pixel-modal-title">{title}</h2>
-          <button className="pixel-modal-close" onClick={onClose}>
+          <h2 id="pixel-modal-title" className="pixel-modal-title">{title}</h2>
+          <button type="button" className="pixel-modal-close" onClick={onClose} aria-label="关闭">
             ✕
           </button>
         </div>
@@ -54,4 +58,7 @@ export const PixelModal: React.FC<PixelModalProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(modalNode, document.body);
 };

@@ -10,14 +10,21 @@ _env = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_env)
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="%(levelname)s %(name)s %(message)s",
     stream=sys.stderr,
     force=True,
 )
 logger = logging.getLogger("app")
-# 减少刷屏：轮询接口不记录到 uvicorn.access，否则每次 status/results 轮询都会打一行
+logging.getLogger("app").setLevel(logging.INFO)
+# 爬取过程用户可读输出（实时日志 + 控制台）
+logging.getLogger("app.douyin_crawler").setLevel(logging.INFO)
+logging.getLogger("app.xhs_crawler").setLevel(logging.INFO)
+logging.getLogger("app.services.crawler_runner").setLevel(logging.INFO)
+# 减少刷屏：轮询、httpx、MediaCrawler 等不输出到控制台
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("MediaCrawler").setLevel(logging.WARNING)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,15 +40,12 @@ app = FastAPI(
 @app.on_event("startup")
 def startup():
     import os
-    from app.debug_log import debug_log
     pid = os.getpid()
-    debug_log(f"[App] backend started PID={pid} on port 8000")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """只记录关键请求，跳过轮询类接口避免刷屏."""
     import os
-    from app.debug_log import debug_log
     path = request.url.path
     method = request.method
     pid = os.getpid()
@@ -49,7 +53,6 @@ async def log_requests(request: Request, call_next):
         path.startswith("/api/search/status/") or path.startswith("/api/search/results/")
     )
     if not is_poll:
-        debug_log(f"[Request] {method} {path} (pid={pid})")
         logger.info("%s %s", method, path)
     response = await call_next(request)
     response.headers["X-Server-PID"] = str(pid)

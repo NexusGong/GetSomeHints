@@ -38,7 +38,7 @@ export const HomePage: React.FC = () => {
   } = useSearchStore();
 
   const { setResults, clearResults, results, filteredResults, selectedPosts, clearSelection } = useResultStore();
-  const { addRecord } = useHistoryStore();
+  const { addRecord, records: historyRecords } = useHistoryStore();
   const [statusCheckInterval, setStatusCheckInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [selectedPost, setSelectedPost] = useState<UnifiedPost | null>(null);
   const [selectedPostComments, setSelectedPostComments] = useState<UnifiedComment[]>([]);
@@ -177,9 +177,7 @@ export const HomePage: React.FC = () => {
             try {
               const finalResults = await searchApi.getSearchResults(response.task_id);
               if (finalResults && Array.isArray(finalResults)) {
-                if (finalResults.length > 0) {
-                  setResults(finalResults);
-                }
+                setResults(finalResults);
                 // 仅在有结果时保存到历史爬取
                 if (statusResponse.total_found > 0) {
                   addRecord({
@@ -426,8 +424,8 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* 只在搜索后才显示状态、日志和结果 */}
-        {hasStartedSearch && (
+        {/* 有搜索状态或历史记录时显示：状态、日志、结果、数据分析入口 */}
+        {(hasStartedSearch || historyRecords.length > 0) && (
           <>
             <div className="status-section">
               <StatusIndicator 
@@ -455,17 +453,14 @@ export const HomePage: React.FC = () => {
             <LogStream clearTrigger={logClearTrigger} />
 
             {/* 只在有结果时才显示结果列表 */}
-            {/* 使用 results.length 判断，因为 filteredResults 可能因为筛选条件为空 */}
             {results.length > 0 && (
               <>
                 <div className="results-section">
-                  {/* 批量操作栏 */}
                   <BatchActions
                     posts={results}
                     selectedPosts={selectedPosts}
                     onClearSelection={clearSelection}
                   />
-                  
                   <ResultList
                     posts={results}
                     availablePlatforms={selectedPlatforms}
@@ -488,6 +483,18 @@ export const HomePage: React.FC = () => {
                 </div>
               </>
             )}
+
+            {/* 无本次结果但有历史时，仍显示数据分析入口（弹窗内可选历史记录） */}
+            {results.length === 0 && historyRecords.length > 0 && (
+              <div className="result-actions-bar">
+                <PixelButton
+                  onClick={() => setIsAnalysisModalOpen(true)}
+                  variant="primary"
+                >
+                  📊 数据分析（基于当前结果或历史记录）
+                </PixelButton>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -507,6 +514,8 @@ export const HomePage: React.FC = () => {
         isOpen={isAnalysisModalOpen}
         onClose={() => setIsAnalysisModalOpen(false)}
         taskId={taskId}
+        posts={results}
+        historyRecords={historyRecords}
       />
 
       <NotificationModal
