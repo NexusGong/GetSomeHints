@@ -152,12 +152,15 @@ class DouYinCrawler(AbstractCrawler):
                     )
                     data = posts_res.get("data")
                     if data is None or data == []:
-                        _user_msg("第 %d 页无结果" % (page + 1))
+                        # 与「获取」一致：start_page 下 page 已是 1-based 语义
+                        _user_msg("第 %d 页无结果" % page)
                         break
                 except DataFetchError:
                     _user_msg("搜索「%s」请求失败" % keyword, level="error")
                     break
 
+                # start_page 跳过导致首次请求时 page 已是 1，故直接用 page 作为 1-based 页码
+                current_page_one_based = page
                 page += 1
                 if "data" not in posts_res:
                     break
@@ -175,7 +178,7 @@ class DouYinCrawler(AbstractCrawler):
                     await update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
                 await self.batch_get_note_comments(page_aweme_list)
-                _user_msg("第 %d 页获取 %d 条" % (page, len(page_aweme_list)))
+                _user_msg("第 %d 页获取 %d 条" % (current_page_one_based, len(page_aweme_list)))
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
             _user_msg("关键词「%s」共 %d 条" % (keyword, len(aweme_list)), level="success")
 

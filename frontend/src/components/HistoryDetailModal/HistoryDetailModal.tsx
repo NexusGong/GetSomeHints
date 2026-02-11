@@ -145,7 +145,12 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
               </div>
               <div className="history-detail-info-item">
                 <span className="info-label">总计:</span>
-                <span className="info-value">{record.totalFound} 条结果</span>
+                <span className="info-value">
+                  {record.results.length} 条结果
+                  {record.totalFound !== record.results.length && (
+                    <span className="info-value-muted">（原始抓取 {record.totalFound} 条，去重后）</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>

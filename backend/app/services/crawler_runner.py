@@ -119,7 +119,9 @@ async def run_search_task(
                     pass
                 idx = platforms.index(platform) + 1
                 progress = int(100 * idx / len(platforms)) if platforms else 0
-                await task_manager.set_progress(task_id, total, by_platform, progress=progress)
+                # 使用去重后的实际条数作为 total_found，与前端「本页结果」一致
+                actual_total = len(task_manager.get_results(task_id))
+                await task_manager.set_progress(task_id, actual_total, by_platform, progress=progress)
             except Exception as e:
                 logger.exception("[Crawler] platform %s failed: %s", platform, e)
                 platform_label = PLATFORM_LABEL.get(platform, platform)
@@ -129,13 +131,15 @@ async def run_search_task(
                 if proxy_pool:
                     proxy_pool.invalidate_current()
                 by_platform[platform] = 0
-                await task_manager.set_progress(task_id, total, by_platform)
+                actual_total = len(task_manager.get_results(task_id))
+                await task_manager.set_progress(task_id, actual_total, by_platform)
                 if consecutive_failures >= max_failures_before_skip:
                     break
 
-        await task_manager.set_completed(task_id, total, by_platform)
-        await broadcast("爬取结束，共 %d 条" % total, "success")
-        logger.info("爬取结束 task_id=%s 共 %d 条 %s", task_id[:8], total, by_platform)
+        actual_total = len(task_manager.get_results(task_id))
+        await task_manager.set_completed(task_id, actual_total, by_platform)
+        await broadcast("爬取结束，共 %d 条" % actual_total, "success")
+        logger.info("爬取结束 task_id=%s 共 %d 条 %s", task_id[:8], actual_total, by_platform)
     except asyncio.CancelledError:
         await task_manager.set_stopped(task_id)
         logger.info("搜索已取消 task_id=%s", task_id[:8])
