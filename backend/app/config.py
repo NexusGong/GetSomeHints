@@ -42,7 +42,7 @@ class Settings:
     PROXY_BUFFER_SECONDS: int = _int(os.getenv("PROXY_BUFFER_SECONDS"), 30)
 
     # Crawler limits
-    CRAWLER_MAX_NOTES_COUNT: int = _int(os.getenv("CRAWLER_MAX_NOTES_COUNT"), 30)
+    CRAWLER_MAX_NOTES_COUNT: int = _int(os.getenv("CRAWLER_MAX_NOTES_COUNT"), 50)
     CRAWLER_MAX_COMMENTS_COUNT: int = _int(os.getenv("CRAWLER_MAX_COMMENTS_COUNT"), 20)
     ENABLE_GET_COMMENTS: bool = _bool(os.getenv("ENABLE_GET_COMMENTS", "true"))
     ENABLE_GET_SUB_COMMENTS: bool = _bool(os.getenv("ENABLE_GET_SUB_COMMENTS", "false"))

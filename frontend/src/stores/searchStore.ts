@@ -28,7 +28,7 @@ const initialState = {
   keyword: '',
   selectedPlatforms: [],
   searchOptions: {
-    maxCount: 10,
+    maxCount: 50,
     enableComments: true,
     enableSubComments: false,
     timeRange: 'all' as const,

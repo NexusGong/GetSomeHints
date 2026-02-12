@@ -21,6 +21,7 @@
 | [代理与防封](#代理与防封) | 快代理 DPS、防封策略 |
 | [搜索与日志说明](#搜索与日志说明) | 搜索结果相关性、进度条与页码 |
 | [免责声明](#免责声明) | 使用须知 |
+| [打赏作者](#打赏作者) | 如果觉得好用，请作者喝杯咖啡 |
 
 ---
 
@@ -201,7 +202,7 @@ cd backend && playwright install chromium
 | MC_LOGIN_TYPE | qrcode / cookie | qrcode |
 | MC_COOKIES | Cookie 字符串 | 空 |
 | MC_ENABLE_CDP_MODE | CDP 连接已有浏览器 | false |
-| CRAWLER_MAX_NOTES_COUNT | 单次最大条数 | 30 |
+| CRAWLER_MAX_NOTES_COUNT | 单次最大条数 | 50 |
 
 ---
 
@@ -243,7 +244,7 @@ IP_PROXY_POOL_COUNT=2
 | CRAWLER_MIN_SLEEP_SEC | 最小请求间隔（秒） | 1.0 |
 | CRAWLER_MAX_SLEEP_SEC | 最大请求间隔（秒） | 3.0 |
 | MAX_CONCURRENCY_NUM | 并发数 | 1 |
-| CRAWLER_MAX_NOTES_COUNT | 单次最大条数 | 30 |
+| CRAWLER_MAX_NOTES_COUNT | 单次最大条数 | 50 |
 | ENABLE_IP_PROXY | 启用代理池 | false |
 | PROXY_BUFFER_SECONDS | 代理提前过期缓冲（秒） | 30 |
 
@@ -262,3 +263,13 @@ IP_PROXY_POOL_COUNT=2
 ## 免责声明
 
 本工具仅供**学习与研究**使用，请遵守各平台使用条款及规范，不用于商业与非法用途。
+
+---
+
+## 打赏作者
+
+如果觉得好用，欢迎请作者喝杯咖啡 ☕
+
+| 支付宝 | 微信支付 |
+|--------|----------|
+| ![支付宝收款码](assets/alipay.png) | ![微信收款码](assets/wechat.png) |

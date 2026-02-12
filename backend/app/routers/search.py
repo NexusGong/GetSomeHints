@@ -22,13 +22,13 @@ async def search_start(body: SearchStartRequest):
     if not body.platforms:
         raise HTTPException(status_code=400, detail="at least one platform required")
 
-    logger.info("搜索请求 关键词=%s 平台=%s max_count=%s", body.keywords.strip(), body.platforms, body.max_count or 100)
+    logger.info("搜索请求 关键词=%s 平台=%s max_count=%s", body.keywords.strip(), body.platforms, body.max_count or 50)
     task_id = task_manager.create_task()
     start_search_background(
         task_id=task_id,
         keywords=body.keywords.strip(),
         platforms=body.platforms,
-        max_count=body.max_count or 100,
+        max_count=body.max_count or 50,
         enable_comments=body.enable_comments if body.enable_comments is not None else True,
         enable_sub_comments=body.enable_sub_comments if body.enable_sub_comments is not None else False,
         time_range=body.time_range or "all",

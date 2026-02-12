@@ -11,7 +11,7 @@ class SearchStartRequest(BaseModel):
     """POST /api/search/start body."""
     keywords: str
     platforms: List[str]  # xhs, dy, ks, bili, wb, tieba, zhihu
-    max_count: Optional[int] = 100
+    max_count: Optional[int] = 50
     enable_comments: Optional[bool] = True
     enable_sub_comments: Optional[bool] = False
     max_comments_per_note: Optional[int] = 14  # 单条内容最大评论数，默认 14
