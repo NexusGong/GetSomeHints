@@ -4,7 +4,8 @@ import type { SearchOptionsConfig, ContentType } from '../components/SearchOptio
 
 interface SearchState {
   keyword: string;
-  selectedPlatforms: Platform[];
+  /** 当前选择的平台（单选，仅能选一个） */
+  selectedPlatform: Platform | null;
   searchOptions: SearchOptionsConfig;
   isSearching: boolean;
   status: 'idle' | 'searching' | 'running' | 'completed' | 'stopped' | 'error';
@@ -15,7 +16,7 @@ interface SearchState {
     byPlatform: Record<Platform, number>;
   };
   setKeyword: (keyword: string) => void;
-  setSelectedPlatforms: (platforms: Platform[]) => void;
+  setSelectedPlatform: (platform: Platform | null) => void;
   setSearchOptions: (options: SearchOptionsConfig) => void;
   startSearch: (taskId: string) => void;
   stopSearch: () => void;
@@ -26,7 +27,7 @@ interface SearchState {
 
 const initialState = {
   keyword: '',
-  selectedPlatforms: [],
+  selectedPlatform: null as Platform | null,
   searchOptions: {
     maxCount: 50,
     enableComments: true,
@@ -47,7 +48,7 @@ const initialState = {
 export const useSearchStore = create<SearchState>((set) => ({
   ...initialState,
   setKeyword: (keyword) => set({ keyword }),
-  setSelectedPlatforms: (platforms) => set({ selectedPlatforms: platforms }),
+  setSelectedPlatform: (platform) => set({ selectedPlatform: platform }),
   setSearchOptions: (searchOptions) => set({ searchOptions }),
   startSearch: (taskId) =>
     set({

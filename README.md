@@ -181,9 +181,14 @@ GetSomeHints/
 
 ### 安装
 
+**必须用与运行后端相同的 Python 环境**安装浏览器，否则会报 `Executable doesn't exist at .../chromium-xxxx`：
+
 ```bash
-cd backend && playwright install chromium
+# 先激活后端用的环境（如 conda activate getsomehints），再执行：
+cd backend && python -m playwright install chromium
 ```
+
+不要用 `npx playwright install` 或未激活环境下的 `playwright install`，否则浏览器版本/路径与 Python 包不一致会启动失败。
 
 ### 模式与登录
 

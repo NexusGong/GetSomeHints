@@ -125,7 +125,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def close(self) -> None:
         if self.browser_context:
-            await self.browser_context.close()
+            try:
+                await self.browser_context.close()
+            except Exception as e:
+                # 浏览器/context 可能已被用户关闭或提前退出，忽略关闭时的报错
+                logger.debug("[XiaoHongShuCrawler.close] close ignored: %s", e)
             self.browser_context = None
         logger.info("[XiaoHongShuCrawler.close] Browser context closed ...")
 
@@ -133,7 +137,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         from app.xhs_crawler.var import source_keyword_var
 
         keywords_str = os.environ.get("MC_KEYWORDS", "热门").strip() or "热门"
-        max_notes = max(20, int(os.environ.get("CRAWLER_MAX_NOTES_COUNT", "20")))
+        max_notes = max(1, int(os.environ.get("CRAWLER_MAX_NOTES_COUNT", "20")))
         start_page = int(os.environ.get("MC_START_PAGE", "1"))
         sort_type_str = os.environ.get("MC_SORT_TYPE", "general").strip() or "general"
         sort_type = SearchSortType(sort_type_str) if sort_type_str in [e.value for e in SearchSortType] else SearchSortType.GENERAL
@@ -151,12 +155,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
         for keyword in [k.strip() for k in keywords_str.split(",") if k.strip()]:
             source_keyword_var.set(keyword)
             _user_msg("正在搜索: 「%s」" % keyword)
-            page = 1
+            page = start_page
             search_id = get_search_id()
-            while (page - start_page + 1) * xhs_limit_count <= max_notes:
-                if page < start_page:
-                    page += 1
-                    continue
+            while total_count < max_notes:
                 try:
                     _user_msg("正在获取第 %s 页 …" % page)
                     notes_res = await self.xhs_client.get_note_by_keyword(
@@ -179,6 +180,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         page += 1
                         await asyncio.sleep(xhs_config.CRAWLER_MAX_SLEEP_SEC)
                         continue
+                    # 只处理到 max_notes 条，多出的不拉详情不拉评论
+                    need = max_notes - total_count
+                    if need <= 0:
+                        break
+                    items = items[:need]
                     semaphore = asyncio.Semaphore(xhs_config.MAX_CONCURRENCY_NUM)
                     task_list = [
                         self.get_note_detail_async_task(
@@ -202,6 +208,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     _user_progress("正在搜索第 %d 条" % total_count)
                     _user_msg("本页获取 %s 条，关键词「%s」当前共 %s 条" % (len(note_ids), keyword, total_count))
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
+                    if total_count >= max_notes:
+                        break
                     page += 1
                     await asyncio.sleep(xhs_config.CRAWLER_MAX_SLEEP_SEC)
                 except DataFetchError as e:

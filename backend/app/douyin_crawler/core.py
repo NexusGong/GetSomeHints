@@ -120,7 +120,7 @@ class DouYinCrawler(AbstractCrawler):
         # 运行时从环境变量读取，确保 douyin.py 注入的关键词/时间/条数生效（config 在 import 时已固化）
         keywords_str = os.environ.get("MC_KEYWORDS", "热门").strip() or "热门"
         publish_time_type = int(os.environ.get("MC_PUBLISH_TIME_TYPE", "0"))
-        max_notes = max(10, int(os.environ.get("CRAWLER_MAX_NOTES_COUNT", "15")))
+        max_notes = max(1, int(os.environ.get("CRAWLER_MAX_NOTES_COUNT", "15")))
         start_page = int(os.environ.get("MC_START_PAGE", "1"))
 
         _user_msg("开始搜索关键词: %s" % keywords_str)
@@ -165,8 +165,12 @@ class DouYinCrawler(AbstractCrawler):
                 if "data" not in posts_res:
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
+                data_list = posts_res.get("data", [])
+                remaining = max_notes - len(aweme_list)
+                if remaining <= 0:
+                    break
                 page_aweme_list = []
-                for post_item in posts_res.get("data", []):
+                for post_item in data_list[:remaining]:
                     try:
                         aweme_info = post_item.get("aweme_info") or (post_item.get("aweme_mix_info") or {}).get("mix_items", [{}])[0]
                     except (TypeError, IndexError):
@@ -179,6 +183,8 @@ class DouYinCrawler(AbstractCrawler):
                     await self.get_aweme_media(aweme_item=aweme_info)
                 await self.batch_get_note_comments(page_aweme_list)
                 _user_msg("第 %d 页获取 %d 条" % (current_page_one_based, len(page_aweme_list)))
+                if len(aweme_list) >= max_notes:
+                    break
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
             _user_msg("关键词「%s」共 %d 条" % (keyword, len(aweme_list)), level="success")
 
@@ -287,5 +293,9 @@ class DouYinCrawler(AbstractCrawler):
 
     async def close(self) -> None:
         if self.browser_context:
-            await self.browser_context.close()
-            logger.info("[DouYinCrawler.close] Browser context closed ...")
+            try:
+                await self.browser_context.close()
+            except Exception as e:
+                logger.debug("[DouYinCrawler.close] close ignored: %s", e)
+            self.browser_context = None
+        logger.info("[DouYinCrawler.close] Browser context closed ...")

@@ -230,8 +230,6 @@ interface AnalysisModalProps {
   posts?: UnifiedPost[] | null;
   /** 历史记录列表；无当前结果时可选择其中一条进行分析 */
   historyRecords?: HistoryRecord[];
-  /** 打开时是否滚动到大模型分析区块 */
-  scrollToLlmOnOpen?: boolean;
 }
 
 export const AnalysisModal: React.FC<AnalysisModalProps> = ({
@@ -240,7 +238,6 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   taskId,
   posts: postsProp = null,
   historyRecords = [],
-  scrollToLlmOnOpen = false,
 }) => {
   const [stats, setStats] = useState<AnalysisStats | null>(null);
   const [distribution, setDistribution] = useState<Record<string, number>>({});
@@ -283,15 +280,6 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
       loadAnalysisData();
     }
   }, [isOpen, taskId, hasLocalData, computedFromPosts]);
-
-  useEffect(() => {
-    if (isOpen && scrollToLlmOnOpen) {
-      const timer = setTimeout(() => {
-        document.getElementById('analysis-llm-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, scrollToLlmOnOpen]);
 
   const displayStats = hasLocalData && computedFromPosts ? computedFromPosts.stats : stats;
   const displayDistribution = hasLocalData && computedFromPosts ? computedFromPosts.distribution : distribution;
@@ -478,7 +466,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   >
                     <span className="analysis-history-keyword">「{record.keyword}」</span>
                     <span className="analysis-history-meta">
-                      {record.results.length} 条 · {record.platforms.join('、')} · {new Date(record.createdAt).toLocaleString()}
+                      {record.results.length} 条 · {(record.platform ?? record.platforms?.[0]) ? PLATFORMS.find(p => p.value === (record.platform ?? record.platforms?.[0]))?.label ?? (record.platform ?? record.platforms?.[0]) : ''} · {new Date(record.createdAt).toLocaleString()}
                     </span>
                   </button>
                 </li>
@@ -524,93 +512,6 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 </div>
               </section>
             )}
-
-            {/* 大模型分析：潜在卖/买家 */}
-            <section id="analysis-llm-section" className="analysis-section analysis-llm-section">
-              <h3 className="analysis-section-title">大模型分析（潜在卖家 / 潜在买家）</h3>
-              <p className="analysis-section-desc">基于 DeepSeek 对当前帖子与评论做语义分析，识别潜在卖家、潜在买家及消费意向等级，并整理联系方式。</p>
-              {canRunLlmAnalysis ? (
-                <>
-                  <div className="analysis-llm-actions">
-                    <button
-                      type="button"
-                      className="pixel-button analysis-llm-run-btn"
-                      onClick={handleRunLlmLeadsAnalysis}
-                      disabled={llmLoading}
-                    >
-                      {llmLoading ? '分析中…' : '运行 DeepSeek 分析'}
-                    </button>
-                  </div>
-                  {llmError && (
-                    <div className="analysis-llm-error">
-                      {llmError}
-                    </div>
-                  )}
-                  {llmResult && (
-                    <div className="analysis-llm-result">
-                      {llmResult.analysis_summary && (
-                        <p className="analysis-llm-summary">{llmResult.analysis_summary}</p>
-                      )}
-                      {llmResult.potential_sellers.length > 0 && (
-                        <div className="analysis-llm-block">
-                          <h4 className="analysis-llm-block-title">潜在卖家</h4>
-                          <ul className="analysis-llm-list">
-                            {llmResult.potential_sellers.map((s, idx) => (
-                              <li key={`s-${s.author_id}-${s.platform}-${idx}`} className="analysis-llm-item">
-                                <span className="analysis-llm-item-name">{s.author_name || s.author_id}</span>
-                                <span className="analysis-llm-item-platform">{PLATFORMS.find((p) => p.value === s.platform)?.label ?? s.platform}</span>
-                                <span className="analysis-llm-item-reason">{s.reason}</span>
-                                {s.contacts.length > 0 && (
-                                  <span className="analysis-llm-item-contacts">联系方式: {s.contacts.join(' / ')}</span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {llmResult.potential_buyers.length > 0 && (
-                        <div className="analysis-llm-block">
-                          <h4 className="analysis-llm-block-title">潜在买家（按意向排序）</h4>
-                          <ul className="analysis-llm-list">
-                            {llmResult.potential_buyers.map((b, idx) => (
-                              <li key={`b-${b.author_id}-${b.platform}-${idx}`} className="analysis-llm-item">
-                                <span className="analysis-llm-item-name">{b.author_name || b.author_id}</span>
-                                <span className="analysis-llm-item-platform">{PLATFORMS.find((p) => p.value === b.platform)?.label ?? b.platform}</span>
-                                <span className="analysis-llm-intent">{({ explicit_inquiry: '明确询价/求购', interested: '感兴趣/羡慕', sharing_only: '仅分享/炫耀', unknown: '无法判断' })[b.intent_level] ?? b.intent_level}</span>
-                                <span className="analysis-llm-item-reason">{b.reason}</span>
-                                {b.contacts.length > 0 && (
-                                  <span className="analysis-llm-item-contacts">联系方式: {b.contacts.join(' / ')}</span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {llmResult.contacts_summary.length > 0 && (
-                        <div className="analysis-llm-block">
-                          <h4 className="analysis-llm-block-title">联系方式汇总</h4>
-                          <ul className="analysis-llm-list analysis-llm-contacts">
-                            {llmResult.contacts_summary.map((c, idx) => (
-                              <li key={`c-${idx}`} className="analysis-llm-item">
-                                <span className="analysis-llm-item-name">{c.author_id}</span>
-                                <span className="analysis-llm-item-platform">{c.platform}</span>
-                                <span>{c.contact_type}: {c.value}</span>
-                                {c.source && <span className="analysis-llm-item-source">（{c.source}）</span>}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {llmResult.potential_sellers.length === 0 && llmResult.potential_buyers.length === 0 && !llmResult.analysis_summary && (
-                        <p className="analysis-section-desc">本次未识别到潜在卖家或买家。</p>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="analysis-section-desc">请先有搜索结果或选择历史记录后再运行分析。</p>
-              )}
-            </section>
 
             {/* 内容类型分布（多维度决策） */}
             {displayStats?.content_type_distribution && Object.keys(displayStats.content_type_distribution).length > 0 && (

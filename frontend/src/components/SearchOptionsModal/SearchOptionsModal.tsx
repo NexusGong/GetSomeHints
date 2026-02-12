@@ -16,8 +16,8 @@ interface SearchOptionsModalProps {
   onClose: () => void;
   config: SearchOptionsConfig;
   onChange: (config: SearchOptionsConfig) => void;
-  selectedPlatforms: Platform[];
-  onPlatformsChange: (platforms: Platform[]) => void;
+  selectedPlatform: Platform | null;
+  onPlatformChange: (platform: Platform | null) => void;
   disabled?: boolean;
 }
 
@@ -26,8 +26,8 @@ export const SearchOptionsModal: React.FC<SearchOptionsModalProps> = ({
   onClose,
   config,
   onChange,
-  selectedPlatforms,
-  onPlatformsChange,
+  selectedPlatform,
+  onPlatformChange,
   disabled = false,
 }) => {
   const [maxCountInput, setMaxCountInput] = useState(String(config.maxCount));
@@ -95,24 +95,9 @@ export const SearchOptionsModal: React.FC<SearchOptionsModalProps> = ({
     onChange({ ...config, contentTypes: [] });
   };
 
-  const handlePlatformToggle = (platform: Platform) => {
+  const handlePlatformSelect = (platform: Platform) => {
     if (disabled) return;
-    
-    if (selectedPlatforms.includes(platform)) {
-      onPlatformsChange(selectedPlatforms.filter(p => p !== platform));
-    } else {
-      onPlatformsChange([...selectedPlatforms, platform]);
-    }
-  };
-
-  const handleSelectAllPlatforms = () => {
-    if (disabled) return;
-    onPlatformsChange(PLATFORMS.map(p => p.value));
-  };
-
-  const handleDeselectAllPlatforms = () => {
-    if (disabled) return;
-    onPlatformsChange([]);
+    onPlatformChange(selectedPlatform === platform ? null : platform);
   };
 
   return (
@@ -123,38 +108,20 @@ export const SearchOptionsModal: React.FC<SearchOptionsModalProps> = ({
       size="medium"
     >
       <div className="search-options-modal">
-        {/* 平台选择 */}
+        {/* 平台选择（单选） */}
         <div className="search-options-modal-group">
           <div className="search-options-modal-label">
             <span>选择平台:</span>
-            <div className="search-options-modal-platform-actions">
-              <button
-                className="pixel-button-small"
-                onClick={handleSelectAllPlatforms}
-                disabled={disabled}
-                type="button"
-              >
-                全选
-              </button>
-              <button
-                className="pixel-button-small"
-                onClick={handleDeselectAllPlatforms}
-                disabled={disabled}
-                type="button"
-              >
-                取消
-              </button>
-            </div>
           </div>
           <div className="search-options-modal-platforms">
             {PLATFORMS.map((platform) => {
-              const isSelected = selectedPlatforms.includes(platform.value);
+              const isSelected = selectedPlatform === platform.value;
               return (
                 <button
                   key={platform.value}
                   className={`search-options-modal-platform-item ${isSelected ? 'selected' : ''}`}
                   style={{ '--platform-color': platform.color } as React.CSSProperties}
-                  onClick={() => handlePlatformToggle(platform.value)}
+                  onClick={() => handlePlatformSelect(platform.value)}
                   disabled={disabled}
                   type="button"
                 >
@@ -164,9 +131,9 @@ export const SearchOptionsModal: React.FC<SearchOptionsModalProps> = ({
               );
             })}
           </div>
-          {selectedPlatforms.length > 0 && (
+          {selectedPlatform !== null && (
             <div className="search-options-modal-platform-info">
-              已选择 {selectedPlatforms.length} 个平台
+              已选择 {PLATFORMS.find(p => p.value === selectedPlatform)?.label ?? selectedPlatform}
             </div>
           )}
         </div>

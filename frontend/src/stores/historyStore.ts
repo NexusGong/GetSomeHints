@@ -6,7 +6,10 @@ export interface HistoryRecord {
   id: string;
   taskId: string;
   keyword: string;
-  platforms: Platform[];
+  /** 当前仅支持单选平台；兼容旧数据用 platforms[0] */
+  platform?: Platform;
+  /** @deprecated 仅用于兼容旧历史记录，新记录请用 platform */
+  platforms?: Platform[];
   createdAt: string;
   completedAt?: string;
   status: 'completed' | 'stopped' | 'failed';

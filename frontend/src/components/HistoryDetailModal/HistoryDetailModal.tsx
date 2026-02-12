@@ -132,7 +132,9 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
               <div className="history-detail-info-item">
                 <span className="info-label">平台:</span>
                 <div className="info-platforms">
-                  {record.platforms.map((platform) => {
+                  {(() => {
+                    const platform = record.platform ?? record.platforms?.[0];
+                    if (!platform) return null;
                     const platformInfo = PLATFORMS.find((p) => p.value === platform);
                     const count = record.byPlatform[platform] || 0;
                     return (
@@ -140,7 +142,7 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
                         {platformInfo?.icon} {platformInfo?.label} ({count})
                       </span>
                     );
-                  })}
+                  })()}
                 </div>
               </div>
               <div className="history-detail-info-item">

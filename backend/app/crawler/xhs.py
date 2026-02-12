@@ -130,7 +130,7 @@ def _run_xhs_sync_in_thread(
     os.environ["MC_KEYWORDS"] = keywords.strip() or "热门"
     os.environ["MC_CRAWLER_TYPE"] = "search"
     os.environ["MC_NOTE_TYPE"] = _content_types_to_note_type(content_types)
-    os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(20, min(max_count, 100)))
+    os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(1, min(max_count, 100)))
     os.environ["ENABLE_GET_COMMENTS"] = "true" if enable_comments else "false"
     os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))
     os.environ["ENABLE_GET_SUB_COMMENTS"] = "false"
@@ -202,7 +202,7 @@ class XiaoHongShuCrawler(BaseCrawler):
         return await asyncio.to_thread(
             run_search_sync,
             keywords.strip() or "热门",
-            max(20, min(max_count, 100)),
+            max(1, min(max_count, 100)),
             enable_comments,
             max_comments_per_note,
             time_range,

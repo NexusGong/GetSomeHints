@@ -23,14 +23,14 @@ import './HomePage.css';
 export const HomePage: React.FC = () => {
   const {
     keyword,
-    selectedPlatforms,
+    selectedPlatform,
     searchOptions,
     isSearching,
     status,
     taskId,
     stats,
     setKeyword,
-    setSelectedPlatforms,
+    setSelectedPlatform,
     setSearchOptions,
     startSearch,
     updateStatus,
@@ -100,10 +100,10 @@ export const HomePage: React.FC = () => {
       return;
     }
 
-    if (selectedPlatforms.length === 0) {
+    if (selectedPlatform === null) {
       setNotification({
         isOpen: true,
-        message: '请至少选择一个平台',
+        message: '请选择一个平台',
         type: 'warning',
       });
       return;
@@ -117,7 +117,7 @@ export const HomePage: React.FC = () => {
 
       const response = await searchApi.startSearch({
         keywords: keyword,
-        platforms: selectedPlatforms,
+        platforms: [selectedPlatform],
         max_count: searchOptions.maxCount,
         enable_comments: searchOptions.enableComments,
         enable_sub_comments: searchOptions.enableSubComments,
@@ -186,7 +186,8 @@ export const HomePage: React.FC = () => {
                     id: response.task_id,
                     taskId: response.task_id,
                     keyword: keyword,
-                    platforms: selectedPlatforms,
+                    platform: selectedPlatform,
+                    platforms: [selectedPlatform],
                     createdAt: new Date().toISOString(),
                     completedAt: new Date().toISOString(),
                     status: statusResponse.status === 'completed' ? 'completed' : 'failed',
@@ -262,7 +263,8 @@ export const HomePage: React.FC = () => {
                 id: taskId,
                 taskId: taskId,
                 keyword: keyword,
-                platforms: selectedPlatforms,
+                platform: selectedPlatform,
+                platforms: [selectedPlatform],
                 createdAt: new Date().toISOString(),
                 completedAt: new Date().toISOString(),
                 status: 'stopped',
@@ -314,14 +316,9 @@ export const HomePage: React.FC = () => {
 
   // 格式化平台显示文本
   const getPlatformsText = () => {
-    if (selectedPlatforms.length === 0) return '';
-    if (selectedPlatforms.length <= 2) {
-      return selectedPlatforms.map(p => {
-        const platformInfo = PLATFORMS.find(pl => pl.value === p);
-        return platformInfo ? platformInfo.label : p;
-      }).join('、');
-    }
-    return `${selectedPlatforms.length}个平台`;
+    if (selectedPlatform === null) return '';
+    const platformInfo = PLATFORMS.find(pl => pl.value === selectedPlatform);
+    return platformInfo ? platformInfo.label : selectedPlatform;
   };
 
   // 格式化内容类型显示文本
@@ -340,7 +337,7 @@ export const HomePage: React.FC = () => {
 
   // 获取设置按钮显示文本
   const getSettingsButtonText = () => {
-    if (selectedPlatforms.length === 0) {
+    if (selectedPlatform === null) {
       return '搜索设置';
     }
     const platformsText = getPlatformsText();
@@ -422,7 +419,7 @@ export const HomePage: React.FC = () => {
               <button
                 className="search-submit-icon-btn"
                 onClick={handleSearch}
-                disabled={isSearching || !keyword.trim() || selectedPlatforms.length === 0}
+                disabled={isSearching || !keyword.trim() || selectedPlatform === null}
                 title="搜索"
               >
                 {isSearching ? '⏳' : '↑'}
@@ -470,7 +467,7 @@ export const HomePage: React.FC = () => {
                   />
                   <ResultList
                     posts={results}
-                    availablePlatforms={selectedPlatforms}
+                    availablePlatforms={selectedPlatform !== null ? [selectedPlatform] : []}
                     onViewDetail={handleViewDetail}
                   />
                 </div>
@@ -556,8 +553,8 @@ export const HomePage: React.FC = () => {
         onClose={() => setIsSearchOptionsModalOpen(false)}
         config={searchOptions}
         onChange={setSearchOptions}
-        selectedPlatforms={selectedPlatforms}
-        onPlatformsChange={setSelectedPlatforms}
+        selectedPlatform={selectedPlatform}
+        onPlatformChange={setSelectedPlatform}
         disabled={isSearching}
       />
     </div>

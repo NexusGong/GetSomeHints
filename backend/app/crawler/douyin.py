@@ -161,7 +161,7 @@ async def _run_douyin_crawler_search(
         os.environ["MC_PLATFORM"] = "dy"
         os.environ["MC_KEYWORDS"] = (keywords or "").strip() or "热门"
         os.environ["MC_CRAWLER_TYPE"] = "search"
-        os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(10, min(max_count, 100)))
+        os.environ["CRAWLER_MAX_NOTES_COUNT"] = str(max(1, min(max_count, 100)))
         os.environ["CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES"] = str(max(0, min(max_comments_per_note, 50)))  # noqa: E501
         os.environ["MC_PUBLISH_TIME_TYPE"] = str(_time_range_to_publish_time_type(time_range))
         os.environ["MC_SEARCH_CHANNEL"] = _content_types_to_search_channel(content_types)

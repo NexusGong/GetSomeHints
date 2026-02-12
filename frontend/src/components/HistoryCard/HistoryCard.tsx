@@ -137,7 +137,9 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({
       </div>
       
       <div className="history-card-platforms">
-        {record.platforms.map((platform) => {
+        {(() => {
+          const platform = record.platform ?? record.platforms?.[0];
+          if (!platform) return null;
           const platformInfo = PLATFORMS.find((p) => p.value === platform);
           const count = record.byPlatform[platform] || 0;
           return (
@@ -145,7 +147,7 @@ export const HistoryCard: React.FC<HistoryCardProps> = ({
               {platformInfo?.icon} {platformInfo?.label} ({count})
             </span>
           );
-        })}
+        })()}
       </div>
     </PixelCard>
   );
