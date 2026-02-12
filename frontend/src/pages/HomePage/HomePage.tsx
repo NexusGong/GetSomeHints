@@ -354,7 +354,7 @@ export const HomePage: React.FC = () => {
     <div className="home-page">
       <div className="home-page-header">
         <div className="home-page-header-title-row">
-          <img src="/logo.png" alt="GetSomeHints" className="home-page-logo" />
+          <img src="/assets/logo.png" alt="GetSomeHints" className="home-page-logo" />
           <h1>GetSomeHints</h1>
         </div>
         <div className="home-page-header-text">

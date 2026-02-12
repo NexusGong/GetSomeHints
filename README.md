@@ -1,6 +1,6 @@
 <div align="center">
 
-![GetSomeHints Logo](logo.png)
+![GetSomeHints Logo](assets/logo.png)
 
 **GetSomeHints** — 多平台内容搜索与线索分析工具
 
@@ -96,7 +96,10 @@ GetSomeHints/
 ├── backend/          # FastAPI，搜索/分析 API，爬虫，代理池
 ├── frontend/          # React + Vite，像素风 UI
 ├── scripts/          # 一键部署、清除登录态等
-├── logo.png
+├── assets/
+│   ├── logo.png
+│   ├── alipay.png
+│   └── wechat.png
 └── README.md
 ```
 
